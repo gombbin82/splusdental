@@ -288,5 +288,18 @@ export function initCreateDialog(onCreated: () => void) {
     .forEach((b) => b.addEventListener('click', () => dialog.close()));
   dialog.addEventListener('close', reset);
 
+  // Click on the backdrop closes the dialog. The dialog has no padding, so a click whose target is
+  // the <dialog> itself landed outside the content. Require the press to start there too, so a
+  // text selection dragged out of a field doesn't close it, and stay open while a request runs.
+  let pressedOnBackdrop = false;
+  dialog.addEventListener('pointerdown', (e) => {
+    pressedOnBackdrop = e.target === dialog;
+  });
+  dialog.addEventListener('click', (e) => {
+    const busy = $<HTMLButtonElement>('create-btn').disabled;
+    if (e.target === dialog && pressedOnBackdrop && !busy) dialog.close();
+    pressedOnBackdrop = false;
+  });
+
   return { open };
 }

@@ -891,14 +891,15 @@ code {
 
 .field input:focus,
 .money:focus-within {
-  outline: none;
+  /* One 2px ring drawn over the 1px border; follows the rounded corners. */
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
   border-color: var(--primary);
-  box-shadow: inset 0 0 0 1px var(--primary);
 }
 
 .field input[aria-invalid='true'] {
   border-color: var(--danger);
-  box-shadow: inset 0 0 0 1px var(--danger);
+  outline-color: var(--danger);
 }
 
 .money {
@@ -912,11 +913,17 @@ code {
   color: var(--ink-2);
 }
 
-.money input {
+.field .money input {
   border: 0;
+  border-radius: 0;
   height: 100%;
   padding-left: 6px;
-  box-shadow: none !important;
+  background: transparent;
+}
+
+/* The wrapper shows the focus ring; the inner input stays plain. */
+.field .money input:focus {
+  outline: none;
 }
 
 .field-hint {
@@ -1070,5 +1077,21 @@ code {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Phones: fit the compact tables without sideways scrolling. */
+@media (max-width: 600px) {
+  .data-table th,
+  .data-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .data-table th:first-child,
+  .data-table td:first-child {
+    padding-left: 16px;
+  }
+  .data-table td.num {
+    white-space: normal;
   }
 }
