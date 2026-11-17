@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { practice, serviceGroups } from '../data/practice';
+---
+
+<BaseLayout
+  title="Dental services"
+  description="General dentistry at S+ Dental in Mountlake Terrace, WA: comprehensive exams, preventive care, deep cleaning, fillings, crowns and bridges, dentures, root canals, extractions, implants, whitening, clear aligners and 3D x-ray."
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>Services</h1>
+      <p class="lead">
+        S+ Dental is a general dentistry office. Every patient starts with a comprehensive exam,
+        and from there we build a plan around what you need and want for a healthy smile.
+      </p>
+    </div>
+  </header>
+
+  {
+    serviceGroups.map((group, i) => (
+      <section
+        class:list={['band', { 'band-surface': i % 2 === 0 }]}
+        aria-labelledby={`group-${i}`}
+      >
+        <div class="wrap split">
+          <h2 id={`group-${i}`}>{group.title}</h2>
+          <dl class="services">
+            {group.services.map((s) => (
+              <div>
+                <dt>{s.name}</dt>
+                <dd>{s.blurb}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="band" aria-labelledby="next-heading">
+    <div class="wrap">
+      <div class="callout">
+        <h2 id="next-heading">Not sure what you need?</h2>
+        <p>
+          Book a comprehensive exam and Dr. Kang will walk you through your options. Questions
+          before then? Call <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href={practice.links.booking} rel="noopener"
+            >Make an appointment</a
+          >
+          <a class="btn btn-secondary" href="/new-patients">New patient information</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .services {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .services > div {
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .services > div:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  dt {
+    font-weight: 700;
+    font-size: var(--step-1);
+    letter-spacing: -0.01em;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    color: var(--ink-soft);
+  }
+</style>

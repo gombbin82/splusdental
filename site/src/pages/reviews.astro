@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OwnerInput from '../components/OwnerInput.astro';
+import { practice } from '../data/practice';
+import { reviews } from '../data/reviews';
+---
+
+<BaseLayout
+  title="Patient reviews"
+  description="Read what patients say about S+ Dental and Dr. Stephanie Kang on Google and Facebook."
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>Patient reviews</h1>
+      <p class="lead">
+        Patients most often mention clear, thorough explanations, an unhurried visit, treatment
+        plans that don't push extra work, a comfortable experience for people with dental
+        anxiety, and a kind front desk.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href={practice.links.googleMaps} rel="noopener"
+          >Read our reviews on Google</a
+        >
+        <a class="btn btn-secondary" href={practice.links.facebook} rel="noopener"
+          >Visit us on Facebook</a
+        >
+      </div>
+    </div>
+  </header>
+
+  <section class="band band-surface" aria-labelledby="reviews-heading">
+    <div class="wrap">
+      <h2 id="reviews-heading">In their words</h2>
+      {
+        reviews.length > 0 ? (
+          <ul class="reviews">
+            {reviews.map((r) => (
+              <li>
+                <figure>
+                  <p class="stars" aria-label={`${r.rating} out of 5 stars`}>
+                    {'★'.repeat(r.rating)}
+                  </p>
+                  <blockquote>
+                    <p>{r.text}</p>
+                  </blockquote>
+                  <figcaption>
+                    {r.author}, on {r.source}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <OwnerInput
+            id="reviews"
+            needed="Paste real reviews (exact text and reviewer name, with the reviewer's consent where appropriate) into site/src/data/reviews.ts. Until then this page links to Google and Facebook."
+          >
+            <p>
+              Our patients share their experiences on{' '}
+              <a href={practice.links.googleMaps} rel="noopener">
+                Google
+              </a>{' '}
+              and{' '}
+              <a href={practice.links.facebook} rel="noopener">
+                Facebook
+              </a>
+              . If you've visited us, we'd be grateful if you left a review there too.
+            </p>
+          </OwnerInput>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .reviews {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 20px;
+  }
+
+  @media (min-width: 800px) {
+    .reviews {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  figure {
+    margin: 0;
+    height: 100%;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--paper);
+  }
+
+  .stars {
+    color: var(--gold-ink);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  blockquote {
+    margin: 0 0 12px;
+  }
+
+  figcaption {
+    font-weight: 650;
+  }
+</style>

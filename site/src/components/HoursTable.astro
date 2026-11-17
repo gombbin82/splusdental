@@ -1,0 +1,62 @@
+---
+import { hours } from '../data/practice';
+
+interface Props {
+  caption?: string;
+}
+
+const { caption = 'Office hours' } = Astro.props;
+---
+
+<table class="hours">
+  <caption>{caption}</caption>
+  <tbody>
+    {
+      hours.map((row) => (
+        <tr>
+          <th scope="row">{row.days}</th>
+          <td>{row.hours}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .hours {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  caption {
+    text-align: left;
+    font-weight: 700;
+    font-size: var(--step-1);
+    letter-spacing: -0.01em;
+    padding-bottom: 8px;
+  }
+
+  th,
+  td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 550;
+    padding-right: 16px;
+  }
+
+  td {
+    text-align: right;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  tr:last-child th,
+  tr:last-child td {
+    border-bottom: 0;
+  }
+</style>

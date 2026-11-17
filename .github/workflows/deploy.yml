@@ -28,6 +28,8 @@ env:
 
 jobs:
   image:
+    # Skip until infra is applied and the repo variables exist (see infra/README.md).
+    if: vars.GCP_WIF_PROVIDER != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
