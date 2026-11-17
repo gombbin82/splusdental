@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBanner from '../components/PageBanner.astro';
+import { practice } from '../data/practice';
+
+const updated = 'November 17, 2026';
+---
+
+<BaseLayout
+  title="Privacy Policy | S+ Dental, Mountlake Terrace"
+  fullTitle
+  breadcrumb="Privacy policy"
+  description="How the S+ Dental website and staff tools handle information: no tracking or ads, Google sign-in for staff only, and payments processed by Stripe."
+>
+  <PageBanner title="Privacy policy" />
+
+  <section class="band legal-text">
+    <div class="narrow">
+      <p><em>Last updated {updated}</em></p>
+
+      <p>
+        This policy covers the {practice.name} website (splus.dental) and our staff tools. It does not
+        cover your dental records, which are protected under federal and state health privacy law and
+        described in the Notice of Privacy Practices we provide at the office.
+      </p>
+
+      <h2>Visiting our website</h2>
+      <p>
+        We do not use advertising, analytics, or tracking cookies, and we do not sell or share personal
+        information. Our hosting provider (Google Firebase) keeps standard technical logs, such as IP
+        address and pages requested, to operate and secure the site.
+      </p>
+      <p>
+        Some pages include or link to services run by other companies, which have their own privacy
+        policies: an embedded Google Map, appointment booking through Calendly, our Facebook page, and a
+        new-patient packet stored on Google Drive.
+      </p>
+
+      <h2>Online payments</h2>
+      <p>
+        When we send you a payment link, the payment is handled by Stripe on Stripe's secure page. Your
+        card details go directly to Stripe and never reach our systems. We receive a record of the
+        payment (amount, date, and the contact details you enter) so we can apply it to your account.
+        Please do not include health information in payment forms.
+      </p>
+
+      <h2>Staff sign-in</h2>
+      <p>
+        Our staff tools use Google sign-in. We receive only the account's name, email address, and
+        whether the email is verified, and use them solely to check that the person is authorized
+        practice staff. We do not access any other Google account data.
+      </p>
+
+      <h2>Contact us</h2>
+      <p>
+        Questions about this policy: email <a href={`mailto:${practice.email}`}>{practice.email}</a>{' '}
+        or call <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal-text .narrow {
+    text-align: left;
+  }
+  .legal-text h2 {
+    margin-top: 1.6em;
+  }
+</style>
