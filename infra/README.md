@@ -28,7 +28,7 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | WIF provider | `projects/<number>/locations/global/workloadIdentityPools/splus-web-github/providers/github-oidc` |
 | Hosting sites | `splus-dental` (prod), `splus-dental-staging` (staging) — variables, see below |
 | Secrets | `splus-web-<env>-stripe-secret-key`, `splus-web-<env>-stripe-webhook-secret` |
-| Cloud Run env | `APP_ENV`, `ADMIN_HD`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
+| Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
 
 ### Who owns what on the Cloud Run service
 
@@ -95,6 +95,21 @@ next `apply` reverts them.
    redirects `www.splus.dental` → apex; staging attaches `staging.splus.dental`. **Never touch the MX / Google
    Workspace records.**
 
+## Managing access (admin / staff)
+
+`/admin` uses Google sign-in, then an exact-email allowlist per env (no database):
+
+- `admin_emails` — full access (payment links + settings, reports, later traffic reports).
+- `staff_emails` — payment links: create, list, deactivate.
+- Anyone else, even a verified `@splus.dental` account, gets 403. An email on both lists is admin.
+
+Edit the lists in `infra/envs/<env>/terraform.tfvars` (git-ignored — real emails never go in the repo) and
+apply; Cloud Run rolls a new revision with the updated `ADMIN_EMAILS` / `STAFF_EMAILS` in about a minute:
+
+```sh
+terraform -chdir=infra/envs/staging apply
+```
+
 ## Secret versions
 
 Values never go through Terraform (they would land in state). Use Stripe **test** keys for staging.
@@ -118,7 +133,7 @@ Terraform can't create a standard OAuth Web client, so do it once in the console
    **External** (the project isn't under a `splus.dental` org — see `docs/architecture.md` decision 7). App
    name "S+ Dental Staff", support email an `@splus.dental` address, authorized domain `splus.dental`. Scopes:
    `openid`, `email`, `profile` only (non-sensitive, so no verification is needed). Publish the app (In
-   production) so sign-in isn't limited to test users. The server enforces `hd == "splus.dental"`.
+   production) so sign-in isn't limited to test users. The server only admits emails on `admin_emails` / `staff_emails`.
 2. **Credentials → Create credentials → OAuth client ID → Web application**, name `splus-web`.
    Authorized JavaScript origins:
    - `https://splus.dental`

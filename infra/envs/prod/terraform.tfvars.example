@@ -1,4 +1,9 @@
 # Copy to terraform.tfvars (git-ignored) and fill in.
+# Who can sign in to /admin (exact Google account emails; anyone else gets 403).
+# Admins: full access (settings, reports). Staff: payment links. Re-run apply after editing.
+admin_emails = ["owner@example.com"]
+staff_emails = ["frontdesk@example.com"]
+
 oauth_client_id = "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
 
 # hosting_site_id = "splus-dental"

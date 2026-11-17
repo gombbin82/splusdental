@@ -12,7 +12,7 @@ Work is tracked in GitHub issues.
 
 ## Short-term goals
 1. Rebuild and improve the public website (currently Google Sites).
-2. Staff admin area at `/admin`, sign-in restricted to `@splus.dental` Google Workspace accounts.
+2. Staff admin area at `/admin`, Google sign-in limited to an allowlist of admin and staff emails.
 3. Admin tool to create Stripe Payment Links with custom options.
 
 ## Hard rules
@@ -21,8 +21,10 @@ Work is tracked in GitHub issues.
 - **No patient health information (PHI)** in code, fixtures, logs, Stripe metadata, or commits. Stripe is not
   a HIPAA business associate: payment descriptions stay generic ("S+ Dental — account balance"); use chart
   numbers/initials or invoice numbers, never procedure names or diagnoses.
-- Admin auth must be enforced **server-side**: verify the Google ID token signature and audience, and require
-  `email_verified == true` and `hd == "splus.dental"`. The client-side `hd` hint is UX only.
+- Admin auth must be enforced **server-side**: verify the Google ID token signature and audience, require
+  `email_verified == true`, and allow only emails on the `ADMIN_EMAILS` / `STAFF_EMAILS` allowlists (role
+  `admin` or `staff`); everyone else is 403. Admin-only routes use `requireAdmin`. The real email lists live
+  only in git-ignored `terraform.tfvars` — never commit them.
 - Stripe: develop in **test mode**; live keys only via Secret Manager in prod.
 - Infra changes go through Terraform (`infra/`), not console click-ops. Stephen runs `terraform apply` himself.
 - Don't change DNS for `splus.dental` without an explicit plan in an issue: the domain also carries Google

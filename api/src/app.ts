@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { secureHeaders } from 'hono/secure-headers';
 import Stripe from 'stripe';
-import { requireStaff, type StaffEnv, type TokenVerifier } from './auth.js';
+import { requireAdmin, requireStaff, type StaffEnv, type TokenVerifier } from './auth.js';
 import { stripeMode, type Config } from './config.js';
 import { log } from './log.js';
 import {
@@ -72,18 +72,33 @@ export function createApp({ config, verify, stripe }: AppDeps) {
   app.get('/config', (c) =>
     c.json({
       googleClientId: config.googleClientId,
-      adminHd: config.adminHd,
       stripeMode: stripeMode(config.stripeSecretKey),
       env: config.appEnv,
     }),
   );
 
-  const staffOnly = requireStaff({ verify, adminHd: config.adminHd });
+  const staffOnly = requireStaff({
+    verify,
+    adminEmails: config.adminEmails,
+    staffEmails: config.staffEmails,
+  });
   app.use('/me', staffOnly);
   app.use('/payment-links', staffOnly);
   app.use('/payment-links/*', staffOnly);
+  app.use('/admin/*', staffOnly, requireAdmin);
 
   app.get('/me', (c) => c.json(c.get('staff')));
+
+  // Admin-only. Read-only view of how this environment is configured (no secrets, no emails).
+  app.get('/admin/settings', (c) =>
+    c.json({
+      env: config.appEnv,
+      stripeMode: stripeMode(config.stripeSecretKey),
+      publicSiteUrl: config.publicSiteUrl,
+      adminCount: config.adminEmails.length,
+      staffCount: config.staffEmails.length,
+    }),
+  );
 
   app.get('/payment-links', async (c) => {
     const q = listQuery.safeParse(c.req.query());

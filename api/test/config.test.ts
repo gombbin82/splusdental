@@ -25,12 +25,22 @@ describe('loadConfig', () => {
     });
     expect(cfg).toEqual({
       appEnv: 'dev',
-      adminHd: 'splus.dental',
+      adminEmails: [],
+      staffEmails: [],
       googleClientId: 'client.apps.googleusercontent.com',
       publicSiteUrl: 'http://localhost:4321',
       stripeSecretKey: 'sk_test_x',
       port: 8080,
     });
+  });
+
+  it('parses email allowlists: comma/space separated, lower-cased, de-duplicated', () => {
+    const cfg = loadConfig({
+      ADMIN_EMAILS: ' Owner@Splus.Dental, someone@gmail.com ,owner@splus.dental',
+      STAFF_EMAILS: 'info@splus.dental\nfront@splus.dental',
+    });
+    expect(cfg.adminEmails).toEqual(['owner@splus.dental', 'someone@gmail.com']);
+    expect(cfg.staffEmails).toEqual(['info@splus.dental', 'front@splus.dental']);
   });
 
   it('strips a trailing slash from PUBLIC_SITE_URL', () => {

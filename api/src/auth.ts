@@ -1,9 +1,12 @@
 import type { MiddlewareHandler } from 'hono';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 
+export type Role = 'admin' | 'staff';
+
 export interface Staff {
   email: string;
   name: string;
+  role: Role;
 }
 
 export type StaffEnv = { Variables: { staff: Staff } };
@@ -24,9 +27,25 @@ export function createGoogleVerifier(
   };
 }
 
+/** Admins win if an email is on both lists. Emails are compared lower-cased. */
+export function roleFor(
+  email: string,
+  lists: { adminEmails: readonly string[]; staffEmails: readonly string[] },
+): Role | null {
+  const e = email.trim().toLowerCase();
+  if (lists.adminEmails.includes(e)) return 'admin';
+  if (lists.staffEmails.includes(e)) return 'staff';
+  return null;
+}
+
+/**
+ * Signed-in users must present a valid Google ID token with a verified email that is on the admin
+ * or staff allowlist. Anyone else is 403. Empty lists mean nobody gets in (fail closed).
+ */
 export function requireStaff(opts: {
   verify: TokenVerifier;
-  adminHd: string;
+  adminEmails: readonly string[];
+  staffEmails: readonly string[];
 }): MiddlewareHandler<StaffEnv> {
   return async (c, next) => {
     const match = /^Bearer\s+(\S+)$/i.exec(c.req.header('Authorization') ?? '');
@@ -41,11 +60,18 @@ export function requireStaff(opts: {
       c.header('WWW-Authenticate', 'Bearer error="invalid_token"');
       return c.json({ error: 'invalid_token' }, 401);
     }
-    // `hd` is only present for Google Workspace accounts; the email suffix alone is not proof.
-    if (claims.email_verified !== true || claims.hd !== opts.adminHd || !claims.email) {
+    if (claims.email_verified !== true || !claims.email) {
       return c.json({ error: 'forbidden' }, 403);
     }
-    c.set('staff', { email: claims.email, name: claims.name ?? claims.email });
+    const role = roleFor(claims.email, opts);
+    if (!role) return c.json({ error: 'forbidden' }, 403);
+    c.set('staff', { email: claims.email.toLowerCase(), name: claims.name ?? claims.email, role });
     await next();
   };
 }
+
+/** Use after requireStaff: only admins pass. */
+export const requireAdmin: MiddlewareHandler<StaffEnv> = async (c, next) => {
+  if (c.get('staff')?.role !== 'admin') return c.json({ error: 'admin_only' }, 403);
+  await next();
+};

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setLogSink, type LogSink } from '../src/log.js';
-import { TEST_CONFIG, authHeaders, testApp } from './helpers/app.js';
+import { ADMIN_TOKEN, TEST_CONFIG, authHeaders, testApp } from './helpers/app.js';
 
 let lines: string[];
 let prevSink: LogSink;
@@ -18,7 +18,6 @@ describe('GET /api/config', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
       googleClientId: TEST_CONFIG.googleClientId,
-      adminHd: 'splus.dental',
       stripeMode: 'test',
       env: 'staging',
     });
@@ -42,7 +41,51 @@ describe('GET /api/me', () => {
   it('returns the signed-in staff member', async () => {
     const res = await testApp().request('/api/me', { headers: authHeaders() });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ email: 'frontdesk@splus.dental', name: 'Front Desk' });
+    expect(await res.json()).toEqual({
+      email: 'frontdesk@splus.dental',
+      name: 'Front Desk',
+      role: 'staff',
+    });
+  });
+
+  it('reports the admin role for an admin', async () => {
+    const res = await testApp().request('/api/me', { headers: authHeaders({}, ADMIN_TOKEN) });
+    expect(await res.json()).toMatchObject({ email: 'owner@splus.dental', role: 'admin' });
+  });
+});
+
+describe('GET /api/admin/settings (admin only)', () => {
+  it('401 without a token', async () => {
+    expect((await testApp().request('/api/admin/settings')).status).toBe(401);
+  });
+
+  it('403 for staff', async () => {
+    const res = await testApp().request('/api/admin/settings', { headers: authHeaders() });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'admin_only' });
+  });
+
+  it('200 for an admin, without exposing emails or secrets', async () => {
+    const res = await testApp().request('/api/admin/settings', {
+      headers: authHeaders({}, ADMIN_TOKEN),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      env: 'staging',
+      stripeMode: 'test',
+      publicSiteUrl: 'https://staging.splus.dental',
+      adminCount: 1,
+      staffCount: 1,
+    });
+    expect(JSON.stringify(body)).not.toMatch(/@|sk_/);
+  });
+});
+
+describe('staff can use payment links', () => {
+  it('lists links as staff', async () => {
+    const res = await testApp().request('/api/payment-links', { headers: authHeaders() });
+    expect(res.status).toBe(200);
   });
 });
 

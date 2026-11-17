@@ -101,6 +101,20 @@ p {
   border-radius: 6px;
   margin-left: 4px;
 }
+.role-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--line, #e5e7eb);
+  color: var(--ink, #111);
+}
+body[data-role='admin'] .role-badge {
+  background: var(--brand, #1f6f5c);
+  color: #fff;
+}
 .who {
   display: flex;
   align-items: center;
