@@ -15,7 +15,7 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | `shared/` | `gs://splusdental-tfstate/splus-web/shared` | APIs, Artifact Registry repo `splus-web`, deployer SA `splus-web-deploy`, WIF pool `splus-web-github` / provider `github-oidc`, Firebase on the project, project budget alert. |
 | `envs/staging/` | `.../splus-web/staging` | `modules/env` with `env = "staging"` |
 | `envs/prod/` | `.../splus-web/prod` | `modules/env` with `env = "prod"` |
-| `modules/env/` | — | Per env: runtime SA `splus-web-api-<env>`, secrets `splus-web-<env>-stripe-{secret-key,webhook-secret}` (empty shells), Cloud Run service `splus-web-api-<env>` (behind `enable_service`), Firebase Hosting site, optional custom domains (behind `enable_custom_domains`), and the deployer's env-scoped IAM. |
+| `modules/env/` | — | Per env: runtime SA `splus-web-api-<env>`, secrets `splus-web-<env>-stripe-{secret-key,webhook-secret}` (empty shells), Cloud Run service `splus-web-api-<env>` (behind `enable_service`), Firebase Hosting sites for the public site and the staff admin, optional public custom domains (behind `enable_custom_domains`), optional admin domain (behind `enable_admin_domain`), and the deployer's env-scoped IAM. |
 
 ### Names other code depends on
 
@@ -26,7 +26,9 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | Runtime SAs | `splus-web-api-<env>@splusdental.iam.gserviceaccount.com` |
 | Deployer SA | `splus-web-deploy@splusdental.iam.gserviceaccount.com` |
 | WIF provider | `projects/<number>/locations/global/workloadIdentityPools/splus-web-github/providers/github-oidc` |
-| Hosting sites | `splus-dental` (prod), `splus-dental-staging` (staging) — variables, see below |
+| Hosting sites (public) | `splus-dental` (prod), `splus-dental-staging` (staging) — firebase.json targets `prod` / `staging` |
+| Hosting sites (admin) | `splus-dental-admin` (prod), `splus-dental-admin-staging` (staging) — targets `admin-prod` / `admin-staging` |
+| Admin domains | `admin.splus.dental` (prod), `admin-staging.splus.dental` (staging) |
 | Secrets | `splus-web-<env>-stripe-secret-key`, `splus-web-<env>-stripe-webhook-secret` |
 | Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
 
@@ -44,6 +46,7 @@ next `apply` reverts them.
 - `roles/run.developer` on `splus-web-api-staging` and `splus-web-api-prod` only
 - `roles/iam.serviceAccountUser` on the two runtime SAs only
 - `roles/firebasehosting.admin` on the project (Hosting has no per-site IAM)
+- `roles/serviceusage.serviceUsageViewer` + `serviceUsageConsumer` on the project (firebase-tools checks the Hosting API)
 - Impersonable only by GitHub OIDC tokens whose `repository == "gombbin82/splusdental"`
 
 ## Prerequisites
@@ -76,7 +79,8 @@ next `apply` reverts them.
    Newly enabled APIs can take a minute to propagate; if the budget, Firebase or WIF resources fail with
    "API not enabled", re-run `apply`.
 3. **OAuth client** (manual, below) → put the client ID into `envs/*/terraform.tfvars`.
-4. **Envs, first pass** (`enable_service = false`): creates runtime SAs, empty secrets, Hosting sites.
+4. **Envs, first pass** (`enable_service = false`): creates runtime SAs, empty secrets, Hosting sites
+   (public site and staff admin site per env).
    ```sh
    for env in staging prod; do
      cp infra/envs/$env/terraform.tfvars.example infra/envs/$env/terraform.tfvars   # edit
@@ -95,9 +99,49 @@ next `apply` reverts them.
    redirects `www.splus.dental` → apex; staging attaches `staging.splus.dental`. **Never touch the MX / Google
    Workspace records.**
 
+## Prod first deploy
+
+Prod mirrors staging: same steps, `envs/prod`, deployed by a manual workflow run instead of a push.
+
+```sh
+cp infra/envs/prod/terraform.tfvars.example infra/envs/prod/terraform.tfvars   # set admin_emails, staff_emails
+terraform -chdir=infra/envs/prod init
+terraform -chdir=infra/envs/prod apply            # first pass: runtime SA, secrets, both Hosting sites
+
+# Placeholder until the practice's Stripe account exists (issue #9); swap for the live key at go-live.
+printf 'sk_test_placeholder' | gcloud secrets versions add splus-web-prod-stripe-secret-key --project=splusdental --data-file=-
+
+sed -i '' 's/^enable_service = false/enable_service = true/' infra/envs/prod/terraform.tfvars
+terraform -chdir=infra/envs/prod apply            # second pass: Cloud Run service
+
+gh workflow run deploy.yml -R gombbin82/splusdental --ref main   # builds, then deploys API + hosting:prod + hosting:admin-prod
+```
+
+The prod job uses the GitHub `production` environment, which GitHub creates on first use. Optional: in repo
+Settings → Environments → production add yourself as a required reviewer and restrict it to `main` and `v*`
+tags; each prod run then waits for your approval.
+
+Result: public site at `https://splus-dental.web.app`, admin at `https://splus-dental-admin.web.app`. Those
+URLs work before any DNS change, so DNS can later be pointed at them (apex/www via issue #10; admin below).
+Until the admin domain is attached, `https://splus-dental.web.app/admin` redirects to
+`https://admin.splus.dental`, which won't resolve yet — use the `*-admin.web.app` URL directly.
+
+## Admin domain (admin.splus.dental)
+
+The admin app has its own Hosting site per env, so its hostname can go live independently of the public
+site's apex/www cutover (issue #10). It only adds records for a new host name.
+
+1. In `infra/envs/<env>/terraform.tfvars` set `enable_admin_domain = true`, then apply.
+2. `terraform -chdir=infra/envs/<env> output admin_domain_dns_updates` lists the records Firebase wants
+   (usually a TXT for ownership plus A/CNAME for the host).
+3. Squarespace → Domains → splus.dental → DNS → **Custom records**: add exactly those records for host
+   `admin` (prod) or `admin-staging` (staging). **Do not touch** the Google Workspace records (MX, SPF, DKIM),
+   `www`, or the apex domain forwarding.
+4. Firebase verifies and issues the certificate (minutes to ~24 h). Re-run the `output` command to see status.
+
 ## Managing access (admin / staff)
 
-`/admin` uses Google sign-in, then an exact-email allowlist per env (no database):
+The staff admin (`admin.splus.dental`; staging `admin-staging.splus.dental`) uses Google sign-in, then an exact-email allowlist per env (no database):
 
 - `admin_emails` — full access (payment links + settings, reports, later traffic reports).
 - `staff_emails` — payment links: create, list, deactivate.
@@ -140,10 +184,15 @@ Terraform can't create a standard OAuth Web client, so do it once in the console
    - `https://www.splus.dental`
    - `https://staging.splus.dental`
    - `https://splus-dental.web.app`, `https://splus-dental.firebaseapp.com`
-   - `https://splus-dental-staging.web.app`, `https://splus-dental-staging.firebaseapp.com`
-   - `http://localhost:4321`
+   - `https://admin.splus.dental`
+   - `https://admin-staging.splus.dental`
+   - `https://splus-dental-admin.web.app`, `https://splus-dental-admin.firebaseapp.com`
+   - `https://splus-dental-admin-staging.web.app`, `https://splus-dental-admin-staging.firebaseapp.com`
+   - `http://localhost:4322` (local `pnpm dev:admin`)
 
-   (Use the real site IDs if you overrode `hosting_site_id`.) No redirect URIs are needed for the Google
+   Sign-in only happens on the admin hosts; the public-site origins (`splus.dental`, `www`, `staging`,
+   `splus-dental*.web.app`) don't need to be listed, but listing them is harmless. (Use the real site IDs if
+   you overrode `hosting_site_id` / `admin_hosting_site_id`.) No redirect URIs are needed for the Google
    Identity Services button. Ignore the client secret — the ID-token flow doesn't use it; don't store it.
 3. Put the client ID (not secret, but keep it out of git anyway) in `oauth_client_id` in both
    `envs/*/terraform.tfvars`.

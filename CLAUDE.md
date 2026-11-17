@@ -12,7 +12,7 @@ Work is tracked in GitHub issues.
 
 ## Short-term goals
 1. Rebuild and improve the public website (currently Google Sites).
-2. Staff admin area at `/admin`, Google sign-in limited to an allowlist of admin and staff emails.
+2. Staff admin at `admin.splus.dental` (`admin/` package, own Firebase Hosting site), Google sign-in limited to an allowlist of admin and staff emails.
 3. Admin tool to create Stripe Payment Links with custom options.
 
 ## Hard rules

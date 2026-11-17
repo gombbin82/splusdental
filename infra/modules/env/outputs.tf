@@ -32,3 +32,18 @@ output "custom_domain_dns_updates" {
   description = "DNS records Firebase asks for, per custom domain (empty while custom domains are disabled)."
   value       = { for d, r in google_firebase_hosting_custom_domain.this : d => r.required_dns_updates }
 }
+
+output "admin_hosting_site_id" {
+  description = "Firebase Hosting site ID of the staff admin app."
+  value       = google_firebase_hosting_site.admin.site_id
+}
+
+output "admin_hosting_default_url" {
+  description = "Default URL of the staff admin app (https://<site>.web.app)."
+  value       = google_firebase_hosting_site.admin.default_url
+}
+
+output "admin_domain_dns_updates" {
+  description = "DNS records Firebase asks for to serve admin_domain (null while enable_admin_domain = false)."
+  value       = one(google_firebase_hosting_custom_domain.admin[*].required_dns_updates)
+}

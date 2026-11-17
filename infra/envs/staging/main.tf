@@ -47,6 +47,10 @@ module "env" {
   enable_service      = var.enable_service
   deletion_protection = false
 
+  admin_hosting_site_id = var.admin_hosting_site_id
+  enable_admin_domain   = var.enable_admin_domain
+  admin_domain          = "admin-staging.splus.dental"
+
   enable_custom_domains = var.enable_custom_domains
   custom_domains = {
     "staging.splus.dental" = {}

@@ -7,33 +7,81 @@
       "cleanUrls": true,
       "trailingSlash": false,
       "redirects": [
-        { "source": "/home", "destination": "/", "type": 301 },
-        { "source": "/about-us", "destination": "/about", "type": 301 },
-        { "source": "/contact-us", "destination": "/contact", "type": 301 },
+        {
+          "source": "/admin",
+          "destination": "https://admin.splus.dental",
+          "type": 301
+        },
+        {
+          "source": "/admin/**",
+          "destination": "https://admin.splus.dental",
+          "type": 301
+        },
+        {
+          "source": "/home",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/about-us",
+          "destination": "/about",
+          "type": 301
+        },
+        {
+          "source": "/contact-us",
+          "destination": "/contact",
+          "type": 301
+        },
         {
           "source": "/new-patients/your-first-visit",
           "destination": "/new-patients#first-visit",
           "type": 301
         },
-        { "source": "/new-patients/forms", "destination": "/new-patients#forms", "type": 301 },
+        {
+          "source": "/new-patients/forms",
+          "destination": "/new-patients#forms",
+          "type": 301
+        },
         {
           "source": "/new-patients/financing",
           "destination": "/new-patients#financing",
           "type": 301
         },
-        { "source": "/reviews", "destination": "/", "type": 301 }
+        {
+          "source": "/reviews",
+          "destination": "/",
+          "type": 301
+        }
       ],
       "rewrites": [
-        { "source": "/api/**", "run": { "serviceId": "splus-web-api-prod", "region": "us-west1" } }
+        {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "splus-web-api-prod",
+            "region": "us-west1"
+          }
+        }
       ],
       "headers": [
         {
           "source": "**",
           "headers": [
-            { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-            { "key": "X-Content-Type-Options", "value": "nosniff" },
-            { "key": "X-Frame-Options", "value": "DENY" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
             {
               "key": "Permissions-Policy",
               "value": "camera=(), microphone=(), geolocation=(), payment=()"
@@ -42,17 +90,10 @@
         },
         {
           "source": "/_astro/**",
-          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-        },
-        {
-          "source": "/admin{,/**}",
           "headers": [
-            { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-            { "key": "Cache-Control", "value": "no-cache" },
-            { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
             {
-              "key": "Content-Security-Policy",
-              "value": "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
             }
           ]
         }
@@ -65,37 +106,85 @@
       "cleanUrls": true,
       "trailingSlash": false,
       "redirects": [
-        { "source": "/home", "destination": "/", "type": 301 },
-        { "source": "/about-us", "destination": "/about", "type": 301 },
-        { "source": "/contact-us", "destination": "/contact", "type": 301 },
+        {
+          "source": "/admin",
+          "destination": "https://splus-dental-admin-staging.web.app",
+          "type": 301
+        },
+        {
+          "source": "/admin/**",
+          "destination": "https://splus-dental-admin-staging.web.app",
+          "type": 301
+        },
+        {
+          "source": "/home",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/about-us",
+          "destination": "/about",
+          "type": 301
+        },
+        {
+          "source": "/contact-us",
+          "destination": "/contact",
+          "type": 301
+        },
         {
           "source": "/new-patients/your-first-visit",
           "destination": "/new-patients#first-visit",
           "type": 301
         },
-        { "source": "/new-patients/forms", "destination": "/new-patients#forms", "type": 301 },
+        {
+          "source": "/new-patients/forms",
+          "destination": "/new-patients#forms",
+          "type": 301
+        },
         {
           "source": "/new-patients/financing",
           "destination": "/new-patients#financing",
           "type": 301
         },
-        { "source": "/reviews", "destination": "/", "type": 301 }
+        {
+          "source": "/reviews",
+          "destination": "/",
+          "type": 301
+        }
       ],
       "rewrites": [
         {
           "source": "/api/**",
-          "run": { "serviceId": "splus-web-api-staging", "region": "us-west1" }
+          "run": {
+            "serviceId": "splus-web-api-staging",
+            "region": "us-west1"
+          }
         }
       ],
       "headers": [
         {
           "source": "**",
           "headers": [
-            { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-            { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-            { "key": "X-Content-Type-Options", "value": "nosniff" },
-            { "key": "X-Frame-Options", "value": "DENY" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
             {
               "key": "Permissions-Policy",
               "value": "camera=(), microphone=(), geolocation=(), payment=()"
@@ -104,17 +193,146 @@
         },
         {
           "source": "/_astro/**",
-          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-        },
-        {
-          "source": "/admin{,/**}",
           "headers": [
-            { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-            { "key": "Cache-Control", "value": "no-cache" },
-            { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "admin-prod",
+      "public": "admin/dist",
+      "ignore": ["**/.*"],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "splus-web-api-prod",
+            "region": "us-west1"
+          }
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(), microphone=(), geolocation=(), payment=()"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            },
             {
               "key": "Content-Security-Policy",
               "value": "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+            }
+          ]
+        },
+        {
+          "source": "/_astro/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "admin-staging",
+      "public": "admin/dist",
+      "ignore": ["**/.*"],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "splus-web-api-staging",
+            "region": "us-west1"
+          }
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(), microphone=(), geolocation=(), payment=()"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+            }
+          ]
+        },
+        {
+          "source": "/_astro/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
             }
           ]
         }

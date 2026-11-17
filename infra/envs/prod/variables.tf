@@ -45,3 +45,15 @@ variable "staff_emails" {
   type        = list(string)
   default     = []
 }
+
+variable "admin_hosting_site_id" {
+  description = "Firebase Hosting site ID for the staff admin app (firebase.json target admin-prod)."
+  type        = string
+  default     = "splus-dental-admin"
+}
+
+variable "enable_admin_domain" {
+  description = "Attach admin.splus.dental to the admin Hosting site (then add the admin_domain_dns_updates records in DNS)."
+  type        = bool
+  default     = false
+}

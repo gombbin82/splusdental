@@ -168,3 +168,24 @@ resource "google_firebase_hosting_custom_domain" "this" {
   redirect_target       = each.value.redirect_target
   wait_dns_verification = false
 }
+
+# --- Staff admin host (admin.splus.dental) ------------------------------------------------------
+# Separate Hosting site so the admin app lives on its own origin; /api/** rewrites to the same
+# Cloud Run service (see firebase.json targets admin-<env>).
+
+resource "google_firebase_hosting_site" "admin" {
+  provider = google-beta
+
+  project = var.project_id
+  site_id = var.admin_hosting_site_id
+}
+
+resource "google_firebase_hosting_custom_domain" "admin" {
+  provider = google-beta
+  count    = var.enable_admin_domain ? 1 : 0
+
+  project               = var.project_id
+  site_id               = google_firebase_hosting_site.admin.site_id
+  custom_domain         = var.admin_domain
+  wait_dns_verification = false
+}
