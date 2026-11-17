@@ -1,0 +1,208 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<AppShell title="Payment links" current="payment-links">
+  <header class="page-head">
+    <div>
+      <h1>Payment links</h1>
+      <p class="page-sub">
+        Patients pay on Stripe's secure page. Card details never touch our systems.
+      </p>
+    </div>
+    <button class="btn btn-filled" type="button" id="new-link">
+      <Icon name="add" size={20} /> Create payment link
+    </button>
+  </header>
+
+  <div id="test-note" class="note note-info" role="status" hidden>
+    <Icon name="info" size={20} />
+    <span>
+      Test mode: links won't charge real cards. To try one, pay with card 4242 4242 4242 4242, any
+      future date, and any CVC.
+    </span>
+  </div>
+
+  <section class="card table-card" aria-labelledby="recent-heading">
+    <div class="card-head">
+      <h2 id="recent-heading">Recent links</h2>
+      <button class="icon-btn" type="button" id="refresh" title="Refresh">
+        <Icon name="refresh" size={20} />
+        <span class="visually-hidden">Refresh</span>
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Created</th>
+            <th scope="col" class="desc">Description</th>
+            <th scope="col" class="num">Amount</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Created by</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="links-body">
+          <tr><td colspan="7" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="create-dialog" class="dialog" aria-labelledby="create-title">
+    <div id="create-step">
+      <form id="link-form" autocomplete="off" novalidate>
+        <div class="dialog-head">
+          <h2 id="create-title">Create payment link</h2>
+          <button class="icon-btn" type="button" data-close title="Close">
+            <Icon name="close" size={20} />
+            <span class="visually-hidden">Close</span>
+          </button>
+        </div>
+
+        <div class="dialog-body">
+          <fieldset class="segmented">
+            <legend class="visually-hidden">Amount type</legend>
+            <label><input type="radio" name="amountType" value="fixed" checked /> Fixed amount</label>
+            <label
+              ><input type="radio" name="amountType" value="customer" /> Patient enters amount</label
+            >
+          </fieldset>
+
+          <div class="form-grid">
+            <label class="field" data-show="fixed">
+              <span class="field-label">Amount</span>
+              <span class="money"
+                ><i>$</i><input
+                  name="amount"
+                  inputmode="decimal"
+                  placeholder="350.00"
+                  aria-describedby="amount-hint"
+                /></span
+              >
+              <span class="field-hint" id="amount-hint">$0.50 to $10,000.00</span>
+            </label>
+            <label class="field" data-show="customer" hidden>
+              <span class="field-label">Suggested amount <small>optional</small></span>
+              <span class="money"
+                ><i>$</i><input name="preset" inputmode="decimal" placeholder="200.00" /></span
+              >
+            </label>
+            <label class="field" data-show="customer" hidden>
+              <span class="field-label">Minimum <small>optional</small></span>
+              <span class="money"
+                ><i>$</i><input name="minimum" inputmode="decimal" placeholder="0.50" /></span
+              >
+            </label>
+            <label class="field" data-show="customer" hidden>
+              <span class="field-label">Maximum <small>optional</small></span>
+              <span class="money"
+                ><i>$</i><input name="maximum" inputmode="decimal" placeholder="10000.00" /></span
+              >
+            </label>
+
+            <label class="field span-2">
+              <span class="field-label">Description the patient sees</span>
+              <input
+                name="description"
+                maxlength="120"
+                value="S+ Dental — account balance"
+                aria-describedby="phi-warning"
+              />
+              <span class="field-warn" id="phi-warning">
+                <Icon name="warning" size={16} />
+                Keep it generic. No procedure names, diagnoses, or other health details: Stripe isn't
+                a HIPAA-covered system.
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Patient reference <small>optional</small></span>
+              <input
+                name="patientRef"
+                maxlength="20"
+                pattern="[A-Za-z0-9#.\-]{1,20}"
+                placeholder="Chart # or initials"
+                aria-describedby="ref-hint"
+              />
+              <span class="field-hint" id="ref-hint">Not the patient's full name.</span>
+            </label>
+            <label class="field">
+              <span class="field-label">Invoice or statement # <small>optional</small></span>
+              <input
+                name="invoice"
+                maxlength="40"
+                pattern="[A-Za-z0-9#.\/\-]{1,40}"
+                placeholder="2026-1142"
+              />
+            </label>
+          </div>
+
+          <div class="checks">
+            <label
+              ><input type="checkbox" name="singleUse" checked /> One-time use: the link closes after
+              one payment</label
+            >
+            <label><input type="checkbox" name="collectPhone" /> Ask for a phone number</label>
+            <label><input type="checkbox" name="askPatientName" /> Ask the payer for the patient's name</label>
+          </div>
+
+          <p id="form-error" class="form-error" role="alert" hidden></p>
+        </div>
+
+        <div class="dialog-actions">
+          <button class="btn btn-text" type="button" data-close>Cancel</button>
+          <button class="btn btn-filled" type="submit" id="create-btn">Create link</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="result-step" hidden>
+      <div class="dialog-head">
+        <h2>Payment link ready</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="result">
+          <span class="result-icon"><Icon name="check_circle" fill size={28} /></span>
+          <div>
+            <div class="result-amount" id="result-amount"></div>
+            <a id="result-url" class="result-url" target="_blank" rel="noopener noreferrer"></a>
+          </div>
+        </div>
+        <p class="page-sub">Send this link to the patient by text or email.</p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-text" type="button" id="create-another">Create another</button>
+        <button class="btn btn-tonal" type="button" id="copy-btn">
+          <Icon name="content_copy" size={18} /> <span data-label>Copy link</span>
+        </button>
+        <button class="btn btn-filled" type="button" data-close>Done</button>
+      </div>
+    </div>
+  </dialog>
+</AppShell>
+
+<script>
+  import { $, onReady } from '../app/shell';
+  import { LinksTable, initCreateDialog } from '../app/payment-links';
+
+  onReady(({ config }) => {
+    $('test-note').hidden = config.stripeMode !== 'test';
+    const table = new LinksTable($('links-body'), { limit: 25, columns: 7 });
+    const dialog = initCreateDialog(() => void table.load());
+    $('new-link').addEventListener('click', dialog.open);
+    $('refresh').addEventListener('click', () => void table.load());
+    void table.load();
+    if (location.hash === '#new') {
+      history.replaceState(null, '', location.pathname);
+      dialog.open();
+    }
+  });
+</script>

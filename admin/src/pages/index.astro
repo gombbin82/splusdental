@@ -1,168 +1,73 @@
 ---
-// Staff admin. Static page; all data comes from /api with a Google ID token (server-verified).
-// Self-contained on purpose: no shared layout/components from the public site.
-import '../app/admin.css';
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Staff admin — S+ Dental</title>
-    <link rel="icon" href="/favicon.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <script is:inline src="https://accounts.google.com/gsi/client" async defer></script>
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="wrap">
-        <a class="logo" href="/"
-          ><span class="logo-mark">S<sup>+</sup></span> S+ Dental <span class="tag">Staff</span></a
-        >
-        <div id="who" class="who" hidden>
-          <span id="who-email"></span>
-          <span id="who-role" class="role-badge"></span>
-          <button class="btn btn-ghost btn-sm" id="signout" type="button">Sign out</button>
-        </div>
-      </div>
-    </header>
+<AppShell title="Home" current="home">
+  <header class="page-head">
+    <div>
+      <h1>Welcome<span data-first-name></span></h1>
+      <p class="page-sub" id="today"></p>
+    </div>
+  </header>
 
-    <main id="loading-view" class="center-view">
-      <p class="muted">Loading…</p>
-    </main>
+  <div class="home-grid">
+    <a class="card action-card" href="/payment-links#new">
+      <span class="action-icon"><Icon name="add" size={24} /></span>
+      <span>
+        <span class="action-title">Create a payment link</span>
+        <span class="action-text">Send a patient a secure Stripe link for a balance.</span>
+      </span>
+    </a>
+    <a class="card action-card" href="https://splus.dental" target="_blank" rel="noopener">
+      <span class="action-icon"><Icon name="open_in_new" size={22} /></span>
+      <span>
+        <span class="action-title">Open the website</span>
+        <span class="action-text">See splus.dental the way patients do.</span>
+      </span>
+    </a>
+    <a class="card action-card" href="/settings" data-admin hidden>
+      <span class="action-icon"><Icon name="settings" size={22} /></span>
+      <span>
+        <span class="action-title">Settings</span>
+        <span class="action-text">Environment, Stripe mode, and who has access.</span>
+      </span>
+    </a>
+  </div>
 
-    <main id="signin-view" class="center-view" hidden>
-      <div class="panel narrow">
-        <h1 class="h-sm">Staff sign-in</h1>
-        <p class="muted">Sign in with the Google account the practice gave access to.</p>
-        <div id="gsi-button"></div>
-        <p id="signin-error" class="error" role="alert" hidden></p>
-      </div>
-    </main>
+  <section class="card table-card" aria-labelledby="recent-heading">
+    <div class="card-head">
+      <h2 id="recent-heading">Recent payment links</h2>
+      <a class="btn btn-text" href="/payment-links">View all</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Created</th>
+            <th scope="col" class="desc">Description</th>
+            <th scope="col" class="num">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="links-body">
+          <tr><td colspan="5" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</AppShell>
 
-    <main id="app-view" class="wrap app" hidden>
-      <div id="mode-banner" class="banner" role="status" hidden></div>
+<script>
+  import { $, onReady } from '../app/shell';
+  import { LinksTable } from '../app/payment-links';
 
-      <section class="panel" aria-labelledby="create-heading">
-        <h2 class="h-sm" id="create-heading">Create a payment link</h2>
-        <p class="muted small">
-          Send the link to the patient by text or email. They pay on Stripe's secure page — no card
-          details touch our systems.
-        </p>
+  $('today').textContent = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date());
 
-        <form id="link-form" autocomplete="off" novalidate>
-          <div class="seg" role="radiogroup" aria-label="Amount type">
-            <label><input type="radio" name="amountType" value="fixed" checked /> Fixed amount</label>
-            <label
-              ><input type="radio" name="amountType" value="customer" /> Patient enters amount</label
-            >
-          </div>
-
-          <div class="grid">
-            <label class="field" data-show="fixed">
-              <span>Amount (USD)</span>
-              <div class="money">
-                <i>$</i><input
-                  name="amount"
-                  inputmode="decimal"
-                  placeholder="350.00"
-                  aria-describedby="amount-hint"
-                />
-              </div>
-              <em class="hint" id="amount-hint">Between $0.50 and $10,000.00.</em>
-            </label>
-            <label class="field" data-show="customer" hidden>
-              <span>Suggested amount <small>(optional)</small></span>
-              <div class="money"><i>$</i><input name="preset" inputmode="decimal" placeholder="200.00" /></div>
-            </label>
-            <label class="field" data-show="customer" hidden>
-              <span>Minimum <small>(optional)</small></span>
-              <div class="money"><i>$</i><input name="minimum" inputmode="decimal" placeholder="0.50" /></div>
-            </label>
-            <label class="field" data-show="customer" hidden>
-              <span>Maximum <small>(optional)</small></span>
-              <div class="money"><i>$</i><input name="maximum" inputmode="decimal" placeholder="10000.00" /></div>
-            </label>
-
-            <label class="field wide">
-              <span>Description the patient sees</span>
-              <input name="description" maxlength="120" value="S+ Dental — account balance" />
-              <em class="phi-warning"
-                >Keep it generic. No procedure names, diagnoses, or other health details — Stripe isn't a
-                HIPAA-covered system.</em
-              >
-            </label>
-
-            <label class="field">
-              <span>Patient reference <small>(internal, optional)</small></span>
-              <input
-                name="patientRef"
-                maxlength="20"
-                pattern="[A-Za-z0-9#.\-]{1,20}"
-                placeholder="chart # or initials"
-              />
-              <em class="hint">Letters, numbers, # . - only. Not the patient's full name.</em>
-            </label>
-            <label class="field">
-              <span>Invoice / statement # <small>(optional)</small></span>
-              <input name="invoice" maxlength="40" pattern="[A-Za-z0-9#.\/\-]{1,40}" placeholder="2026-1142" />
-            </label>
-          </div>
-
-          <div class="checks">
-            <label
-              ><input type="checkbox" name="singleUse" checked /> One-time use (link closes after one payment)</label
-            >
-            <label><input type="checkbox" name="collectPhone" /> Ask for phone number</label>
-            <label><input type="checkbox" name="askPatientName" /> Ask payer for patient's name</label>
-          </div>
-
-          <div class="actions">
-            <button class="btn btn-primary" type="submit" id="create-btn">Create link</button>
-            <span id="form-error" class="error" role="alert" hidden></span>
-          </div>
-        </form>
-
-        <div id="result" class="result" hidden>
-          <div>
-            <div class="small muted">Payment link ready (<span id="result-amount"></span>)</div>
-            <a id="result-url" target="_blank" rel="noopener noreferrer"></a>
-          </div>
-          <button class="btn btn-ghost btn-sm" id="copy-btn" type="button">Copy</button>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="recent-heading">
-        <div class="row-between">
-          <h2 class="h-sm" id="recent-heading">Recent links</h2>
-          <button class="btn btn-ghost btn-sm" id="refresh" type="button">Refresh</button>
-        </div>
-        <div class="table-wrap">
-          <table class="links">
-            <thead>
-              <tr>
-                <th>Created</th><th>Description</th><th>Amount</th><th>Reference</th><th>By</th><th
-                  >Status</th
-                ><th><span class="visually-hidden">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody id="links-body">
-              <tr><td colspan="7" class="muted">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
-
-    <script>
-      import '../app/admin.ts';
-    </script>
-  </body>
-</html>
+  onReady(() => new LinksTable($('links-body'), { limit: 5, compact: true, columns: 5 }).load());
+</script>

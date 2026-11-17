@@ -1,0 +1,33 @@
+---
+// Inline Material Symbols Rounded icon (weight 400), read from @material-symbols/svg-400 at build
+// time. Only the icons actually used end up in the HTML; no icon font is shipped.
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import process from 'node:process';
+
+interface Props {
+  name: string;
+  fill?: boolean;
+  size?: number;
+  class?: string;
+}
+
+const { name, fill = false, size = 20, class: className = '' } = Astro.props;
+const require = createRequire(path.join(process.cwd(), 'package.json'));
+const file = require.resolve(`@material-symbols/svg-400/rounded/${name}${fill ? '-fill' : ''}.svg`);
+const svg = readFileSync(file, 'utf8');
+const inner = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+---
+
+<svg
+  class:list={['icon', className]}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 -960 960 960"
+  width={size}
+  height={size}
+  fill="currentColor"
+  aria-hidden="true"
+  focusable="false"
+  set:html={inner}
+/>

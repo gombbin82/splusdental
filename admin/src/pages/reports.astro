@@ -1,0 +1,22 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<AppShell title="Reports" current="reports" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Reports</h1>
+      <p class="page-sub">Payments collected through payment links, by day and by staff member.</p>
+    </div>
+  </header>
+
+  <section class="card empty-state">
+    <Icon name="receipt_long" size={40} />
+    <h2>Reports are on the way</h2>
+    <p>
+      Once live Stripe payments start coming in, daily totals and payouts will show up here.
+    </p>
+    <a class="btn btn-tonal" href="/payment-links">Go to payment links</a>
+  </section>
+</AppShell>
