@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { inRange, toCents } from '../src/app/money';
 import { initials } from '../src/app/shell-utils';
+import { cardLabel, deadlineSoon } from '../src/app/payments-utils';
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const robots = read('../public/robots.txt');
@@ -66,4 +67,34 @@ describe('initials', () => {
   it('falls back to the email', () =>
     expect(initials('info@splus.dental', 'info@splus.dental')).toBe('I'));
   it('splits dotted emails', () => expect(initials('', 'jane.doe@x.com')).toBe('JD'));
+});
+
+describe('payments page', () => {
+  it('has a Payments nav item with a held badge, visible to staff (not admin-only)', () => {
+    expect(shell).toMatch(/id: 'payments', href: '\/payments'/);
+    expect(shell).toContain('data-held-badge');
+    expect(read('../src/pages/payments.astro')).not.toMatch(/<AppShell[^>]*adminOnly/);
+  });
+
+  it('create form holds payments by default and has an (initially hidden) email field', () => {
+    const src = read('../src/pages/payment-links.astro');
+    expect(src).toMatch(/name="holdForApproval" checked/);
+    expect(src).toMatch(/data-email-field hidden/);
+    expect(src).toContain('id="email-dialog"');
+  });
+});
+
+describe('cardLabel', () => {
+  it('formats brand and last4', () =>
+    expect(cardLabel({ brand: 'visa', last4: '4242' })).toBe('Visa •••• 4242'));
+  it('falls back', () => {
+    expect(cardLabel(null)).toBe('—');
+    expect(cardLabel({ brand: null, last4: '1111' })).toBe('Card •••• 1111');
+  });
+});
+
+describe('deadlineSoon', () => {
+  const now = 1_700_000_000_000;
+  it('is true within 48h', () => expect(deadlineSoon(now / 1000 + 47 * 3600, now)).toBe(true));
+  it('is false beyond 48h', () => expect(deadlineSoon(now / 1000 + 49 * 3600, now)).toBe(false));
 });

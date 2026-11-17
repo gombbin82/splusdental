@@ -13,6 +13,8 @@ export interface PublicConfig {
   googleClientId: string;
   stripeMode: 'test' | 'live';
   env: 'dev' | 'staging' | 'prod';
+  /** Emailing payment links is configured (GMAIL_SENDER set on the API). */
+  emailEnabled?: boolean;
 }
 
 export interface Me {
@@ -147,6 +149,50 @@ export function handleAuthFailure(err: unknown): boolean {
   return true;
 }
 
+// ---------- dialogs ----------
+
+/**
+ * Close a <dialog> on Escape (native), on [data-close] buttons, and on a backdrop click. The dialog
+ * has no padding, so a click whose target is the <dialog> itself landed outside the content; the
+ * press must start there too (a text selection dragged out of a field doesn't close it), and it
+ * stays open while `isBusy()` (a request in flight).
+ */
+export function wireDialog(dialog: HTMLDialogElement, isBusy: () => boolean = () => false) {
+  dialog
+    .querySelectorAll('[data-close]')
+    .forEach((b) => b.addEventListener('click', () => dialog.close()));
+  let pressedOnBackdrop = false;
+  dialog.addEventListener('pointerdown', (e) => {
+    pressedOnBackdrop = e.target === dialog;
+  });
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog && pressedOnBackdrop && !isBusy()) dialog.close();
+    pressedOnBackdrop = false;
+  });
+  dialog.addEventListener('cancel', (e) => {
+    if (isBusy()) e.preventDefault();
+  });
+}
+
+// ---------- held-payments badge ----------
+
+/** Update the "Payments" nav badge (and anything else marked data-held-count). */
+export async function refreshHeldCount(): Promise<number | null> {
+  try {
+    const { payments } = await api<{ payments: unknown[] }>('/api/payments?status=held&limit=100');
+    const n = payments.length;
+    document.querySelectorAll<HTMLElement>('[data-held-badge]').forEach((el) => {
+      el.textContent = n > 99 ? '99+' : String(n);
+      el.hidden = n === 0;
+      el.setAttribute('aria-label', `${n} need approval`);
+    });
+    document.dispatchEvent(new CustomEvent('held-count', { detail: n }));
+    return n;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- ready hooks for page scripts ----------
 
 let ctx: ShellContext | null = null;
@@ -245,6 +291,7 @@ async function enterApp(config: PublicConfig) {
     renderUser(me);
     signinError('');
     show('app');
+    void refreshHeldCount();
     for (const fn of readyHandlers.splice(0)) await fn(ctx);
   } catch (err) {
     if (!handleAuthFailure(err)) {

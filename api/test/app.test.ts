@@ -20,6 +20,7 @@ describe('GET /api/config', () => {
       googleClientId: TEST_CONFIG.googleClientId,
       stripeMode: 'test',
       env: 'staging',
+      emailEnabled: false,
     });
   });
 

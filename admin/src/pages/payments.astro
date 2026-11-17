@@ -1,0 +1,66 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<AppShell title="Payments" current="payments">
+  <header class="page-head">
+    <div>
+      <h1>Payments</h1>
+      <p class="page-sub">
+        Payments held for approval are authorized on the patient's card but not charged until you
+        approve them.
+      </p>
+    </div>
+  </header>
+
+  <section class="card table-card">
+    <div class="tabs" role="tablist" aria-label="Payments">
+      <button class="tab" role="tab" id="tab-held" aria-selected="true" aria-controls="panel">
+        Needs approval <span class="rail-badge" data-held-badge hidden></span>
+      </button>
+      <button class="tab" role="tab" id="tab-recent" aria-selected="false" aria-controls="panel">
+        Recent
+      </button>
+      <button class="icon-btn tabs-end" type="button" id="refresh" title="Refresh">
+        <Icon name="refresh" size={20} />
+        <span class="visually-hidden">Refresh</span>
+      </button>
+    </div>
+    <div class="table-wrap" id="panel" role="tabpanel" aria-labelledby="tab-held">
+      <table class="data-table stack-mobile">
+        <thead id="payments-head"></thead>
+        <tbody id="payments-body">
+          <tr><td colspan="7" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="confirm-dialog" class="dialog dialog-sm" aria-labelledby="confirm-title">
+    <div class="dialog-head">
+      <h2 id="confirm-title"></h2>
+      <button class="icon-btn" type="button" data-close title="Close">
+        <Icon name="close" size={20} />
+        <span class="visually-hidden">Close</span>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="confirm-amount" id="confirm-amount"></div>
+      <p class="confirm-meta" id="confirm-meta"></p>
+      <p class="page-sub" id="confirm-text"></p>
+      <p id="confirm-error" class="form-error" role="alert" hidden></p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-text" type="button" data-close>Cancel</button>
+      <button class="btn btn-filled" type="button" id="confirm-btn"></button>
+    </div>
+  </dialog>
+</AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initPaymentsPage } from '../app/payments';
+
+  onReady(() => initPaymentsPage());
+</script>

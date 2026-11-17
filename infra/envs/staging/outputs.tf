@@ -13,6 +13,11 @@ output "runtime_sa_email" {
   value       = module.env.runtime_sa_email
 }
 
+output "runtime_sa_unique_id" {
+  description = "Client ID to authorize for gmail.send in Workspace domain-wide delegation."
+  value       = module.env.runtime_sa_unique_id
+}
+
 output "secret_ids" {
   description = "Secrets to add versions to."
   value       = module.env.secret_ids

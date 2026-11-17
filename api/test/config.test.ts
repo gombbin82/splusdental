@@ -30,8 +30,19 @@ describe('loadConfig', () => {
       googleClientId: 'client.apps.googleusercontent.com',
       publicSiteUrl: 'http://localhost:4321',
       stripeSecretKey: 'sk_test_x',
+      gmailSender: '',
+      runtimeSaEmail: '',
       port: 8080,
     });
+  });
+
+  it('reads GMAIL_SENDER (trimmed, lower-cased) and RUNTIME_SA_EMAIL', () => {
+    const cfg = loadConfig({
+      GMAIL_SENDER: ' Info@Splus.Dental ',
+      RUNTIME_SA_EMAIL: 'sa@p.iam.gserviceaccount.com',
+    });
+    expect(cfg.gmailSender).toBe('info@splus.dental');
+    expect(cfg.runtimeSaEmail).toBe('sa@p.iam.gserviceaccount.com');
   });
 
   it('parses email allowlists: comma/space separated, lower-cased, de-duplicated', () => {

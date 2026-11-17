@@ -139,6 +139,21 @@ import Icon from '../components/Icon.astro';
                 placeholder="2026-1142"
               />
             </label>
+
+            <label class="field span-2" data-email-field hidden>
+              <span class="field-label">Patient email <small>optional</small></span>
+              <input
+                name="emailTo"
+                type="email"
+                maxlength="254"
+                autocomplete="off"
+                placeholder="patient@example.com"
+                aria-describedby="email-hint"
+              />
+              <span class="field-hint" id="email-hint"
+                >We'll email the link from the practice address. Leave blank to just copy it.</span
+              >
+            </label>
           </div>
 
           <div class="checks">
@@ -148,6 +163,10 @@ import Icon from '../components/Icon.astro';
             >
             <label><input type="checkbox" name="collectPhone" /> Ask for a phone number</label>
             <label><input type="checkbox" name="askPatientName" /> Ask the payer for the patient's name</label>
+            <label
+              ><input type="checkbox" name="holdForApproval" checked /> Hold payment for approval: approve
+              or release it in Payments within 7 days</label
+            >
           </div>
 
           <p id="form-error" class="form-error" role="alert" hidden></p>
@@ -176,7 +195,13 @@ import Icon from '../components/Icon.astro';
             <a id="result-url" class="result-url" target="_blank" rel="noopener noreferrer"></a>
           </div>
         </div>
-        <p class="page-sub">Send this link to the patient by text or email.</p>
+        <p id="result-email" class="result-email" hidden>
+          <Icon name="mail" size={18} /><span id="result-email-text"></span>
+        </p>
+        <p id="hold-note" class="page-sub" hidden>
+          Payment will be held. Approve or release it on the Payments page.
+        </p>
+        <p class="page-sub">You can also copy the link and text it to the patient.</p>
       </div>
       <div class="dialog-actions">
         <button class="btn btn-text" type="button" id="create-another">Create another</button>
@@ -187,15 +212,57 @@ import Icon from '../components/Icon.astro';
       </div>
     </div>
   </dialog>
+
+  <dialog id="email-dialog" class="dialog dialog-sm" aria-labelledby="email-title">
+    <form id="email-form" autocomplete="off" novalidate>
+      <div class="dialog-head">
+        <h2 id="email-title">Email payment link</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <p class="confirm-meta">Link amount: <strong id="email-amount"></strong></p>
+        <label class="field">
+          <span class="field-label">Patient email</span>
+          <input
+            name="to"
+            type="email"
+            maxlength="254"
+            required
+            placeholder="patient@example.com"
+          />
+        </label>
+        <p class="field-hint">Sent from the practice email address. Generic text, no health details.</p>
+        <p id="email-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-text" type="button" data-close>Cancel</button>
+        <button class="btn btn-filled" type="submit" id="email-send">
+          <Icon name="send" size={18} /> Send
+        </button>
+      </div>
+    </form>
+  </dialog>
 </AppShell>
 
 <script>
   import { $, onReady } from '../app/shell';
-  import { LinksTable, initCreateDialog } from '../app/payment-links';
+  import { LinksTable, initCreateDialog, initEmailDialog } from '../app/payment-links';
 
   onReady(({ config }) => {
     $('test-note').hidden = config.stripeMode !== 'test';
-    const table = new LinksTable($('links-body'), { limit: 25, columns: 7 });
+    const emailOn = config.emailEnabled === true;
+    document.querySelectorAll<HTMLElement>('[data-email-field]').forEach((el) => {
+      el.hidden = !emailOn;
+    });
+    const emailDialog = emailOn ? initEmailDialog(() => void table.load()) : null;
+    const table = new LinksTable($('links-body'), {
+      limit: 25,
+      columns: 7,
+      ...(emailDialog ? { onEmail: (l) => emailDialog.open(l) } : {}),
+    });
     const dialog = initCreateDialog(() => void table.load());
     $('new-link').addEventListener('click', dialog.open);
     $('refresh').addEventListener('click', () => void table.load());

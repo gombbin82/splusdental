@@ -9,6 +9,10 @@ export interface Config {
   googleClientId: string;
   publicSiteUrl: string;
   stripeSecretKey: string;
+  /** Mailbox payment-link emails are sent as (Gmail via domain-wide delegation). '' = email off. */
+  gmailSender: string;
+  /** Runtime service account email; discovered from the metadata server when unset. */
+  runtimeSaEmail: string;
   port: number;
 }
 
@@ -49,6 +53,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     googleClientId: env.GOOGLE_OAUTH_CLIENT_ID ?? '',
     publicSiteUrl: (env.PUBLIC_SITE_URL || 'http://localhost:4321').replace(/\/+$/, ''),
     stripeSecretKey,
+    gmailSender: (env.GMAIL_SENDER ?? '').trim().toLowerCase(),
+    runtimeSaEmail: (env.RUNTIME_SA_EMAIL ?? '').trim(),
     port: Number(env.PORT || 8080),
   };
 }

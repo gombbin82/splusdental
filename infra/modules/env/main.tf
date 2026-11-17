@@ -29,6 +29,14 @@ resource "google_service_account_iam_member" "deployer_act_as" {
   member             = "serviceAccount:${var.deployer_sa_email}"
 }
 
+# Payment-link emails: the runtime SA signs its own JWT (IAM Credentials signJwt, no key file) to
+# get a Gmail token for GMAIL_SENDER via Workspace domain-wide delegation. Granted on itself only.
+resource "google_service_account_iam_member" "runtime_sign_self" {
+  service_account_id = google_service_account.runtime.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = google_service_account.runtime.member
+}
+
 # --- Secrets (empty shells; add versions with gcloud, see infra/README.md) ----------------------
 
 resource "google_secret_manager_secret" "this" {
@@ -94,6 +102,14 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "STAFF_EMAILS"
         value = join(",", var.staff_emails)
+      }
+      env {
+        name  = "GMAIL_SENDER"
+        value = var.gmail_sender
+      }
+      env {
+        name  = "RUNTIME_SA_EMAIL"
+        value = google_service_account.runtime.email
       }
       env {
         name  = "GOOGLE_OAUTH_CLIENT_ID"

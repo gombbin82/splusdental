@@ -104,3 +104,9 @@ variable "admin_domain" {
   description = "Custom hostname for the staff admin app, e.g. admin.splus.dental."
   type        = string
 }
+
+variable "gmail_sender" {
+  description = "Workspace mailbox payment-link emails are sent as (GMAIL_SENDER). Empty disables email. Needs domain-wide delegation, see infra/README.md."
+  type        = string
+  default     = ""
+}

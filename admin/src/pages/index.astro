@@ -12,6 +12,13 @@ import Icon from '../components/Icon.astro';
   </header>
 
   <div class="home-grid">
+    <a class="card action-card held-card" href="/payments" id="held-card" hidden>
+      <span class="action-icon"><Icon name="pending_actions" size={24} /></span>
+      <span>
+        <span class="action-title" id="held-title">Payments need approval</span>
+        <span class="action-text">Approve or release held payments before the card hold expires.</span>
+      </span>
+    </a>
     <a class="card action-card" href="/payment-links#new">
       <span class="action-icon"><Icon name="add" size={24} /></span>
       <span>
@@ -68,6 +75,13 @@ import Icon from '../components/Icon.astro';
     month: 'long',
     day: 'numeric',
   }).format(new Date());
+
+  document.addEventListener('held-count', (e) => {
+    const n = (e as CustomEvent<number>).detail;
+    $('held-card').hidden = n === 0;
+    $('held-title').textContent =
+      n === 1 ? '1 payment needs approval' : `${n} payments need approval`;
+  });
 
   onReady(() => new LinksTable($('links-body'), { limit: 5, compact: true, columns: 5 }).load());
 </script>
