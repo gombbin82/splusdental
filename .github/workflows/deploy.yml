@@ -1,0 +1,104 @@
+# Deploys the API image to Cloud Run and the static site to Firebase Hosting.
+#   push to main        -> staging (splus-web-api-staging + hosting:staging)
+#   tag v* / manual run -> prod    (splus-web-api-prod + hosting:prod), gated by the `production`
+#                          GitHub environment (required reviewers configured in repo settings).
+# Auth is Workload Identity Federation (no keys). Terraform owns Cloud Run env vars, secrets and
+# IAM: this workflow only swaps the container image.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: splusdental
+  REGION: us-west1
+  IMAGE: us-west1-docker.pkg.dev/splusdental/splus-web/api:${{ github.sha }}
+  FIREBASE_TOOLS: firebase-tools@15.34.2
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+      - name: Build and push (skipped if this commit's image already exists)
+        run: |
+          if gcloud artifacts docker images describe "$IMAGE" >/dev/null 2>&1; then
+            echo "Image $IMAGE already exists; reusing it."
+          else
+            docker build -f api/Dockerfile -t "$IMAGE" .
+            docker push "$IMAGE"
+          fi
+
+  staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: image
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          create_credentials_file: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy API (image only)
+        run: gcloud run deploy splus-web-api-staging --image "$IMAGE" --region "$REGION" --project "$PROJECT_ID" --quiet
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build site (noindex)
+        run: pnpm --filter site build
+        env:
+          PUBLIC_NOINDEX: 'true'
+      - name: Deploy hosting
+        run: npx --yes "$FIREBASE_TOOLS" deploy --only hosting:staging --project "$PROJECT_ID" --non-interactive
+
+  prod:
+    # Manual runs must be from main; tags must start with v.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          create_credentials_file: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy API (image only)
+        run: gcloud run deploy splus-web-api-prod --image "$IMAGE" --region "$REGION" --project "$PROJECT_ID" --quiet
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build site
+        run: pnpm --filter site build
+      - name: Deploy hosting
+        run: npx --yes "$FIREBASE_TOOLS" deploy --only hosting:prod --project "$PROJECT_ID" --non-interactive
