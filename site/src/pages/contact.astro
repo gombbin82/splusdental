@@ -1,58 +1,53 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBanner from '../components/PageBanner.astro';
 import HoursTable from '../components/HoursTable.astro';
 import { mapEmbedUrl, practice } from '../data/practice';
 ---
 
 <BaseLayout
-  title="Contact and hours"
-  description="S+ Dental, 21005 44th Ave W Ste 103, Mountlake Terrace, WA 98043. Call (425) 616-2331 or email info@splus.dental. Open Tuesday to Friday, Saturday by appointment."
+  title="Contact & Hours | S+ Dental, Mountlake Terrace WA"
+  fullTitle
+  breadcrumb="Contact us"
+  description="S+ Dental, 21005 44th Ave W Ste 103, Mountlake Terrace, WA 98043. Call (425) 616-2331. Open Tue–Thu 8–5, Fri 7–2, Sat by appointment. Near Lynnwood."
 >
-  <header class="page-head">
-    <div class="wrap">
-      <h1>Contact us</h1>
-      <p class="lead">
-        Call, email or book online. We're in Mountlake Terrace, close to Lynnwood.
-      </p>
-    </div>
-  </header>
+  <PageBanner title="Contact us" />
 
-  <section class="band band-surface" aria-label="Address, phone and hours">
-    <div class="wrap split">
-      <div class="details">
-        <h2 class="visually-hidden">Address and phone</h2>
-        <address>
-          <strong>{practice.name}</strong><br />
-          {practice.address.street}, {practice.address.suite}<br />
-          {practice.address.city}, {practice.address.region}
-          {practice.address.postalCode}
-        </address>
-        <ul class="facts">
-          <li>Phone: <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a></li>
-          <li>Email: <a href={`mailto:${practice.email}`}>{practice.email}</a></li>
-        </ul>
-        <div class="actions">
-          <a class="btn btn-primary" href={practice.links.booking} rel="noopener"
-            >Make an appointment</a
-          >
-          <a class="btn btn-secondary" href={practice.links.googleMaps} rel="noopener"
-            >Get directions</a
-          >
-        </div>
+  <section class="band band-brown center" aria-labelledby="details-heading">
+    <div class="narrow">
+      <h2 id="details-heading" class="visually-hidden">Address, hours and phone</h2>
+      <address>
+        <strong>{practice.name}</strong><br />
+        {`${practice.address.street} ${practice.address.suite}`}<br />
+          {`${practice.address.city}, ${practice.address.region} ${practice.address.postalCode}`}
+      </address>
+      <HoursTable align="center" />
+      <p class="contact">
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a><br />
+        <a href={`mailto:${practice.email}`}>{practice.email}</a>
+      </p>
+      <div class="actions">
+        <a class="btn" href={practice.links.booking} rel="noopener">Make an appointment</a>
+        <a class="btn" href={practice.links.googleMaps} rel="noopener">Get directions</a>
       </div>
-      <HoursTable />
     </div>
   </section>
 
-  <section class="band" aria-labelledby="map-heading">
+  <section class="band band-taupe" aria-labelledby="map-heading">
     <div class="wrap">
-      <h2 id="map-heading">Map</h2>
+      <h2 id="map-heading" class="center">Find us</h2>
       <iframe
         class="map"
-        title="Map showing S+ Dental at 21005 44th Ave W, Mountlake Terrace"
+        title="Map showing S+ Dental at 21005 44th Ave W, Mountlake Terrace, WA"
         src={mapEmbedUrl}
+        width="1150"
+        height="480"
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <p class="center after-map">
+        First visit? Read <a href="/new-patients">what to expect</a> or see{' '}
+        <a href="/services">our services</a>.
+      </p>
     </div>
   </section>
 </BaseLayout>
@@ -61,22 +56,31 @@ import { mapEmbedUrl, practice } from '../data/practice';
   address {
     font-style: normal;
     font-size: var(--step-1);
-    line-height: 1.5;
+    line-height: 1.6;
     margin-bottom: 20px;
+  }
+
+  .contact {
+    margin-top: 16px;
+    font-size: var(--step-1);
   }
 
   .map {
     width: 100%;
+    height: auto;
     aspect-ratio: 4 / 3;
     max-height: 480px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    background: var(--mint);
+    border: 0;
+    background: var(--white);
   }
 
   @media (min-width: 800px) {
     .map {
       aspect-ratio: 16 / 7;
     }
+  }
+
+  .after-map {
+    margin-top: 20px;
   }
 </style>

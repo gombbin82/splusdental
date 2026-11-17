@@ -1,5 +1,4 @@
 ---
-import SPlusMark from './SPlusMark.astro';
 import { addressOneLine, nav, practice } from '../data/practice';
 
 const year = new Date().getFullYear();
@@ -8,20 +7,15 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
   <div class="wrap grid">
     <div>
-      <p class="name">
-        <SPlusMark size={30} />
-        {practice.name}
-      </p>
+      <p class="name">{practice.name}</p>
       <address>
         <a href={practice.links.googleMaps} rel="noopener">{addressOneLine}</a><br />
-        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a><br />
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a> ·
         <a href={`mailto:${practice.email}`}>{practice.email}</a>
       </address>
     </div>
-
     <nav aria-label="Footer">
       <ul>
-        <li><a href="/">Home</a></li>
         {
           nav.map((item) => (
             <li>
@@ -31,64 +25,42 @@ const year = new Date().getFullYear();
         }
       </ul>
     </nav>
-
-    <div>
-      <p>
-        <a class="btn btn-primary" href={practice.links.booking} rel="noopener">Book a visit</a>
-      </p>
-      <p><a href={practice.links.facebook} rel="noopener">S+ Dental on Facebook</a></p>
+    <div class="cta">
+      <a class="btn btn-light" href={practice.links.booking} rel="noopener">Make an appointment</a>
+      <a class="fb" href={practice.links.facebook} rel="noopener">S+ Dental on Facebook</a>
     </div>
   </div>
-  <div class="wrap legal">
-    <p>© {year} {practice.name}, {practice.address.city}, {practice.address.region}</p>
-  </div>
+  <p class="wrap legal">© {year} {practice.name}</p>
 </footer>
 
 <style>
   .site-footer {
-    background: var(--teal-deep);
-    color: #e3efee;
-    padding: 56px 0 24px;
-    margin-top: 0;
+    background: var(--banner);
+    color: #e0e0e0;
+    padding: 48px 0 24px;
+    font-size: var(--step--1);
   }
 
   .site-footer a {
     color: #fff;
   }
 
-  .site-footer .btn-primary {
-    background: #fff;
-    color: var(--teal-deep);
-    border-color: #fff;
-  }
-
-  .site-footer .btn-primary:hover {
-    background: var(--mint);
-    border-color: var(--mint);
-  }
-
-  .site-footer :focus-visible {
-    outline-color: var(--gold);
-  }
-
   .grid {
     display: grid;
-    gap: 32px;
+    gap: 28px;
   }
 
-  @media (min-width: 800px) {
+  @media (min-width: 860px) {
     .grid {
       grid-template-columns: 2fr 1fr 1fr;
     }
   }
 
   .name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
+    font-weight: 700;
     font-size: var(--step-1);
     color: #fff;
+    margin-bottom: 8px;
   }
 
   address {
@@ -101,17 +73,20 @@ const year = new Date().getFullYear();
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 6px;
+    gap: 4px;
+  }
+
+  .cta {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    align-content: start;
   }
 
   .legal {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid rgb(255 255 255 / 0.18);
-    font-size: var(--step--1);
-  }
-
-  .legal p {
-    margin: 0;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid rgb(255 255 255 / 0.15);
+    color: #bdbdbd;
   }
 </style>

@@ -1,86 +1,79 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBanner from '../components/PageBanner.astro';
 import { practice, serviceGroups } from '../data/practice';
 ---
 
 <BaseLayout
-  title="Dental services"
-  description="General dentistry at S+ Dental in Mountlake Terrace, WA: comprehensive exams, preventive care, deep cleaning, fillings, crowns and bridges, dentures, root canals, extractions, implants, whitening, clear aligners and 3D x-ray."
+  title="Dental Services in Mountlake Terrace | S+ Dental"
+  fullTitle
+  breadcrumb="Services"
+  withServices
+  description="Exams, cleanings, fillings, crowns, root canals, implants, dentures, whitening, clear aligners and 3D x-rays at S+ Dental in Mountlake Terrace, near Lynnwood."
 >
-  <header class="page-head">
-    <div class="wrap">
-      <h1>Services</h1>
-      <p class="lead">
-        S+ Dental is a general dentistry office. Every patient starts with a comprehensive exam,
-        and from there we build a plan around what you need and want for a healthy smile.
-      </p>
+  <PageBanner title="Services" />
+
+  <section class="band band-brown" aria-label="Services we offer">
+    <div class="wrap groups">
+      {
+        serviceGroups.map((group, i) => (
+          <section aria-labelledby={`group-${i}`}>
+            <h2 id={`group-${i}`}>{group.title}</h2>
+            <ul>
+              {group.services.map((name) => (
+                <li>{name}</li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
     </div>
-  </header>
+  </section>
 
-  {
-    serviceGroups.map((group, i) => (
-      <section
-        class:list={['band', { 'band-surface': i % 2 === 0 }]}
-        aria-labelledby={`group-${i}`}
-      >
-        <div class="wrap split">
-          <h2 id={`group-${i}`}>{group.title}</h2>
-          <dl class="services">
-            {group.services.map((s) => (
-              <div>
-                <dt>{s.name}</dt>
-                <dd>{s.blurb}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
-    ))
-  }
-
-  <section class="band" aria-labelledby="next-heading">
-    <div class="wrap">
-      <div class="callout">
-        <h2 id="next-heading">Not sure what you need?</h2>
-        <p>
-          Book a comprehensive exam and Dr. Kang will walk you through your options. Questions
-          before then? Call <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
-        </p>
-        <div class="actions">
-          <a class="btn btn-primary" href={practice.links.booking} rel="noopener"
-            >Make an appointment</a
-          >
-          <a class="btn btn-secondary" href="/new-patients">New patient information</a>
-        </div>
+  <section class="band band-taupe center" aria-labelledby="next-heading">
+    <div class="narrow">
+      <h2 id="next-heading">Not sure what you need?</h2>
+      <p>
+        Every new patient starts with a comprehensive exam, and we'll create a plan tailored to
+        your needs. <a href="/new-patients">Learn about your first visit</a> or{' '}
+        <a href="/contact">contact us</a> with questions.
+      </p>
+      <div class="actions">
+        <a class="btn" href={practice.links.booking} rel="noopener">Make an appointment</a>
+        <a class="btn" href={`tel:${practice.phone.tel}`}>Call {practice.phone.display}</a>
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .services {
-    margin: 0;
+  .groups {
     display: grid;
-    gap: 0;
+    gap: 36px 64px;
   }
 
-  .services > div {
-    padding: 16px 0;
-    border-top: 1px solid var(--line);
+  @media (min-width: 760px) {
+    .groups {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
-  .services > div:last-child {
-    border-bottom: 1px solid var(--line);
-  }
-
-  dt {
-    font-weight: 700;
+  h2 {
     font-size: var(--step-1);
-    letter-spacing: -0.01em;
+    font-style: italic;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgb(255 255 255 / 0.35);
+    margin-bottom: 8px;
   }
 
-  dd {
-    margin: 2px 0 0;
-    color: var(--ink-soft);
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    padding: 8px 0;
+    font-size: var(--step-1);
   }
 </style>

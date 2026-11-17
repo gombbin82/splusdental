@@ -6,6 +6,23 @@
       "ignore": ["**/.*"],
       "cleanUrls": true,
       "trailingSlash": false,
+      "redirects": [
+        { "source": "/home", "destination": "/", "type": 301 },
+        { "source": "/about-us", "destination": "/about", "type": 301 },
+        { "source": "/contact-us", "destination": "/contact", "type": 301 },
+        {
+          "source": "/new-patients/your-first-visit",
+          "destination": "/new-patients#first-visit",
+          "type": 301
+        },
+        { "source": "/new-patients/forms", "destination": "/new-patients#forms", "type": 301 },
+        {
+          "source": "/new-patients/financing",
+          "destination": "/new-patients#financing",
+          "type": 301
+        },
+        { "source": "/reviews", "destination": "/", "type": 301 }
+      ],
       "rewrites": [
         { "source": "/api/**", "run": { "serviceId": "splus-web-api-prod", "region": "us-west1" } }
       ],
@@ -47,6 +64,23 @@
       "ignore": ["**/.*"],
       "cleanUrls": true,
       "trailingSlash": false,
+      "redirects": [
+        { "source": "/home", "destination": "/", "type": 301 },
+        { "source": "/about-us", "destination": "/about", "type": 301 },
+        { "source": "/contact-us", "destination": "/contact", "type": 301 },
+        {
+          "source": "/new-patients/your-first-visit",
+          "destination": "/new-patients#first-visit",
+          "type": 301
+        },
+        { "source": "/new-patients/forms", "destination": "/new-patients#forms", "type": 301 },
+        {
+          "source": "/new-patients/financing",
+          "destination": "/new-patients#financing",
+          "type": 301
+        },
+        { "source": "/reviews", "destination": "/", "type": 301 }
+      ],
       "rewrites": [
         {
           "source": "/api/**",

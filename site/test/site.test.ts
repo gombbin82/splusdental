@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dentistJsonLd, hours, practice } from '../src/data/practice';
+import {
+  addressOneLine,
+  breadcrumbJsonLd,
+  dentistJsonLd,
+  hours,
+  nav,
+  practice,
+  serviceGroups,
+  websiteJsonLd,
+} from '../src/data/practice';
 
 describe('practice facts', () => {
   it('keeps contact details exact', () => {
@@ -27,6 +36,59 @@ describe('practice facts', () => {
       },
     ]);
     expect(hours.map((h) => h.hours)).toContain('Closed');
+  });
+});
+
+describe('structured data', () => {
+  it('has the required LocalBusiness fields and no invented ratings', () => {
+    const ld = dentistJsonLd();
+    expect(ld).toMatchObject({
+      '@context': 'https://schema.org',
+      name: 'S+ Dental',
+      url: 'https://splus.dental/',
+      telephone: '+1-425-616-2331',
+      foundingDate: '2023-06',
+      address: {
+        streetAddress: '21005 44th Ave W Ste 103',
+        addressLocality: 'Mountlake Terrace',
+        addressRegion: 'WA',
+        postalCode: '98043',
+      },
+      founder: {
+        name: 'Dr. Stephanie Kang',
+        alumniOf: { name: 'Tufts University School of Dental Medicine' },
+      },
+    });
+    expect(ld.sameAs).toEqual([practice.links.facebook, practice.links.googleMaps]);
+    expect(ld).not.toHaveProperty('aggregateRating');
+    expect(ld).not.toHaveProperty('geo');
+    expect(ld).not.toHaveProperty('makesOffer');
+  });
+
+  it('lists all 12 services as offers on /services', () => {
+    const offers = dentistJsonLd({ withServices: true }).makesOffer as unknown[];
+    expect(offers).toHaveLength(12);
+    expect(serviceGroups.flatMap((g) => g.services)).toHaveLength(12);
+  });
+
+  it('builds breadcrumbs and WebSite nodes', () => {
+    expect(breadcrumbJsonLd('Services', '/services').itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://splus.dental/' },
+      { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://splus.dental/services' },
+    ]);
+    expect(websiteJsonLd()['@type']).toBe('WebSite');
+  });
+
+  it('uses the Google Business Profile address format and the current site navigation', () => {
+    expect(addressOneLine).toBe('21005 44th Ave W Ste 103, Mountlake Terrace, WA 98043');
+    expect(nav.map((n) => n.href)).toEqual([
+      '/',
+      '/about',
+      '/services',
+      '/new-patients',
+      '/patient-resources',
+      '/contact',
+    ]);
   });
 });
 

@@ -1,0 +1,61 @@
+---
+/** Dark title banner with a blue underline bar, as on the original site's inner pages. */
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<header class="page-banner">
+  <h1>{title}</h1>
+</header>
+
+<style>
+  .page-banner {
+    display: grid;
+    place-items: center;
+    min-height: 200px;
+    padding: 48px var(--gutter);
+    text-align: center;
+    color: #fff;
+    background:
+      repeating-linear-gradient(
+        -35deg,
+        transparent 0 70px,
+        rgb(255 255 255 / 0.035) 70px 76px,
+        transparent 76px 150px
+      ),
+      repeating-linear-gradient(
+        35deg,
+        transparent 0 110px,
+        rgb(255 255 255 / 0.03) 110px 118px,
+        transparent 118px 220px
+      ),
+      var(--banner);
+  }
+
+  @media (min-width: 900px) {
+    .page-banner {
+      min-height: 254px;
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: var(--step-4);
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  h1::after {
+    content: '';
+    display: block;
+    width: 100px;
+    height: 7px;
+    margin: 20px auto 0;
+    background: var(--blue);
+  }
+</style>
