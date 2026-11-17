@@ -1,0 +1,10 @@
+packages:
+  - api
+  - site
+
+# @astrojs/astro2tsx loads @napi-rs/wasm-runtime, whose @emnapi peers don't get linked; declare them.
+packageExtensions:
+  '@napi-rs/wasm-runtime':
+    dependencies:
+      '@emnapi/core': '^1.7.1'
+      '@emnapi/runtime': '^1.7.1'
