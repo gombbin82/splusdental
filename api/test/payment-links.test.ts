@@ -68,19 +68,20 @@ describe('POST /api/payment-links', () => {
       amount_display: '$350.00',
       env: 'staging',
     };
-    expect(stripe.prices.create).toHaveBeenCalledWith(
+    expect(stripe.products.create).toHaveBeenCalledWith(
       {
-        currency: 'usd',
-        unit_amount: 35000,
-        product_data: {
-          name: 'S+ Dental — account balance',
-          images: ['https://staging.splus.dental/logo.png'],
-          metadata,
-        },
+        name: 'S+ Dental — account balance',
+        images: ['https://staging.splus.dental/logo.png'],
         metadata,
       },
+      { idempotencyKey: `${IDEM}:product` },
+    );
+    // Prices can't carry product images inline (Stripe: parameter_unknown), so link by id only.
+    expect(stripe.prices.create).toHaveBeenCalledWith(
+      { currency: 'usd', unit_amount: 35000, product: 'prod_1', metadata },
       { idempotencyKey: `${IDEM}:price` },
     );
+    expect(firstArg(stripe.prices.create)).not.toHaveProperty('product_data');
     expect(stripe.paymentLinks.create).toHaveBeenCalledWith(
       {
         line_items: [{ price: 'price_1', quantity: 1 }],
@@ -117,7 +118,7 @@ describe('POST /api/payment-links', () => {
     expect(stripe.prices.create).toHaveBeenCalledWith(
       expect.objectContaining({
         custom_unit_amount: { enabled: true, preset: 20000, minimum: 100, maximum: 50000 },
-        product_data: expect.objectContaining({ name: 'S+ Dental — payment' }),
+        product: 'prod_1',
         metadata: expect.objectContaining({ amount_display: 'Patient enters amount' }),
       }),
       expect.anything(),
@@ -370,8 +371,7 @@ describe('holds and Checkout branding', () => {
         body: JSON.stringify({ amountType: 'fixed', amountCents: 5000 }),
       },
     );
-    const price = firstArg(stripe.prices.create);
-    expect(price.product_data.images).toBeUndefined();
+    expect(firstArg(stripe.products.create).images).toBeUndefined();
   });
 });
 

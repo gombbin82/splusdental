@@ -49,6 +49,9 @@ export function fakeLink(overrides: Partial<Stripe.PaymentLink> = {}): Stripe.Pa
 
 export function fakeStripe() {
   return {
+    products: {
+      create: vi.fn(async () => ({ id: 'prod_1', object: 'product' }) as Stripe.Product),
+    },
     prices: {
       create: vi.fn(async () => ({ id: 'price_1', object: 'price' }) as Stripe.Price),
     },
