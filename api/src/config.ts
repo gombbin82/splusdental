@@ -36,7 +36,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   if (!APP_ENVS.includes(appEnv)) {
     throw new Error(`APP_ENV must be one of ${APP_ENVS.join(', ')}`);
   }
-  const stripeSecretKey = env.STRIPE_SECRET_KEY ?? '';
+  // Trim: keys pasted into Secret Manager often end with a newline, which Node refuses to send in
+  // the Authorization header (Stripe reports it as a connection error).
+  const stripeSecretKey = (env.STRIPE_SECRET_KEY ?? '').trim();
   if (appEnv !== 'prod' && stripeMode(stripeSecretKey) === 'live') {
     throw new Error('Refusing to use a live Stripe key outside prod');
   }

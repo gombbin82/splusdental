@@ -43,6 +43,10 @@ describe('loadConfig', () => {
     expect(cfg.staffEmails).toEqual(['info@splus.dental', 'front@splus.dental']);
   });
 
+  it('trims whitespace/newlines around STRIPE_SECRET_KEY', () => {
+    expect(loadConfig({ STRIPE_SECRET_KEY: 'rk_test_abc\n' }).stripeSecretKey).toBe('rk_test_abc');
+  });
+
   it('strips a trailing slash from PUBLIC_SITE_URL', () => {
     expect(loadConfig({ PUBLIC_SITE_URL: 'https://splus.dental/' }).publicSiteUrl).toBe(
       'https://splus.dental',
