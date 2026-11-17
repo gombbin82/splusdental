@@ -1,0 +1,31 @@
+---
+// Stripe Payment Link return page (see docs/architecture.md). Not indexed by search engines.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { practice } from '../data/practice';
+---
+
+<BaseLayout
+  title="Payment received"
+  description="Thank you for your payment to S+ Dental."
+  noindex
+>
+  <section class="page-head thanks">
+    <div class="wrap">
+      <h1>Thank you. Your payment was received.</h1>
+      <p class="lead">
+        A receipt is on its way to your email. If you have questions about your balance, call us at{' '}
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a> or email{' '}
+        <a href={`mailto:${practice.email}`}>{practice.email}</a>.
+      </p>
+      <div class="actions">
+        <a class="btn btn-secondary" href="/">Back to the S+ Dental home page</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .thanks {
+    min-height: 55vh;
+  }
+</style>

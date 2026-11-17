@@ -1,0 +1,137 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OwnerInput from '../components/OwnerInput.astro';
+import { practice } from '../data/practice';
+---
+
+<BaseLayout
+  title="Patient resources"
+  description="Answers to common questions and care instructions from S+ Dental in Mountlake Terrace, WA."
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>Patient resources</h1>
+      <p class="lead">
+        Answers to common questions about visiting S+ Dental. More care guides are on the way.
+      </p>
+    </div>
+  </header>
+
+  <section class="band band-surface" aria-labelledby="faq-heading">
+    <div class="wrap split">
+      <h2 id="faq-heading">Common questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Are you accepting new patients?</summary>
+          <p>
+            Yes, we welcome new patients. See <a href="/new-patients">New patients</a> for what to expect
+            at your first visit.
+          </p>
+        </details>
+        <details>
+          <summary>How do I book an appointment?</summary>
+          <p>
+            <a href={practice.links.booking} rel="noopener">Book online</a> or call us at{' '}
+            <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+          </p>
+        </details>
+        <details>
+          <summary>How long is the first visit?</summary>
+          <p>
+            Your first visit is a comprehensive exam that takes about 1 to 1½ hours. Please arrive at
+            least 15 minutes early to fill out any paperwork.
+          </p>
+        </details>
+        <details>
+          <summary>Are you open on weekends?</summary>
+          <p>
+            We see patients on Saturdays by appointment only. We're closed on Sundays and Mondays.
+            See our full <a href="/contact">hours</a>.
+          </p>
+        </details>
+        <details>
+          <summary>What does S+ mean?</summary>
+          <p>
+            S+ is the top rank in game ranking systems. Read the story on our <a href="/about"
+              >About page</a
+            >.
+          </p>
+        </details>
+        <OwnerInput
+          id="faq"
+          needed="More FAQs the front desk hears often, e.g. insurance billing, cancellation policy, emergency/same-day visits, parking. Add them as <details> items above."
+        >
+          <p>Have another question? Call us or email {practice.email}.</p>
+        </OwnerInput>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="care-heading">
+    <div class="wrap split">
+      <h2 id="care-heading">After your treatment</h2>
+      <div>
+        <OwnerInput
+          id="post-op"
+          needed="Post-treatment care instructions Dr. Kang wants patients to have (e.g. after extractions, fillings, crowns, deep cleaning, whitening), plus what to do and who to call after hours."
+        >
+          <p>
+            Written aftercare instructions are coming soon. We'll always go over aftercare with you
+            at your visit. If you have questions after a treatment, call us at{' '}
+            <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+          </p>
+        </OwnerInput>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .faq {
+    display: grid;
+    gap: 0;
+  }
+
+  details {
+    border-top: 1px solid var(--line);
+  }
+
+  details:last-of-type {
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+
+  summary {
+    cursor: pointer;
+    padding: 16px 32px 16px 0;
+    font-weight: 700;
+    font-size: var(--step-1);
+    letter-spacing: -0.01em;
+    list-style: none;
+    position: relative;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: '+';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--teal);
+    font-weight: 800;
+    font-size: 1.4em;
+  }
+
+  details[open] summary::after {
+    content: '−';
+  }
+
+  details p {
+    color: var(--ink-soft);
+    padding-bottom: 8px;
+  }
+</style>

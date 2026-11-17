@@ -1,0 +1,64 @@
+---
+/**
+ * A section whose content is waiting on the practice owner (see issue #9).
+ *
+ * Patients see the fallback slot content (or a default "ask us" message). Staging builds
+ * (PUBLIC_NOINDEX=true) also show a highlighted note describing exactly what is needed, so the
+ * owner can review gaps in context. To fill the gap, replace the <OwnerInput> with real content.
+ *
+ * Find every gap with: grep -rn "<OwnerInput" site/src
+ */
+import { noindex } from '../lib/env';
+import { practice } from '../data/practice';
+
+interface Props {
+  /** Short id, e.g. "insurance". Rendered as data-owner-input for easy searching. */
+  id: string;
+  /** What the owner needs to provide. */
+  needed: string;
+}
+
+const { id, needed } = Astro.props;
+const hasFallback = Astro.slots.has('default');
+---
+
+<div class="owner-input" data-owner-input={id}>
+  {
+    noindex && (
+      <p class="owner-note">
+        <strong>Owner input needed ({id}):</strong> {needed}
+      </p>
+    )
+  }
+  {
+    hasFallback ? (
+      <slot />
+    ) : (
+      <p>
+        We're putting this information together. In the meantime, call us at{' '}
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a> or email{' '}
+        <a href={`mailto:${practice.email}`}>{practice.email}</a> and we'll be glad to help.
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .owner-input {
+    border-left: 4px solid var(--gold);
+    padding: 4px 0 4px 20px;
+  }
+
+  .owner-input > :global(:last-child) {
+    margin-bottom: 0;
+  }
+
+  .owner-note {
+    background: #fff4dc;
+    color: var(--gold-ink);
+    border: 1px dashed var(--gold-ink);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-size: var(--step--1);
+  }
+</style>

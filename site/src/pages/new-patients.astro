@@ -1,0 +1,152 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OwnerInput from '../components/OwnerInput.astro';
+import { practice } from '../data/practice';
+
+const steps = [
+  {
+    title: 'Book your comprehensive exam',
+    body: 'Schedule online or by phone. Plan on about 1 to 1½ hours for this first visit.',
+  },
+  {
+    title: 'Send your insurance information',
+    body: 'Share your insurance details before your appointment so we can verify your coverage for the visit.',
+  },
+  {
+    title: 'Arrange your recent x-rays',
+    body: 'We need a set of x-rays for your exam. If another office took recent x-rays, ask them to forward them to us, or give us their contact information at least one week before your appointment. You may need to sign a dental records release form.',
+  },
+  {
+    title: 'Fill out the new patient packet',
+    body: 'Complete the forms at home and bring them along, or arrive at least 15 minutes early to fill them out here.',
+  },
+  {
+    title: 'Get a plan made for you',
+    body: 'After your exam, we create a plan tailored to your oral health, including the type of cleaning you need. Depending on your needs, you may get a cleaning the same day or come back for another visit.',
+  },
+];
+---
+
+<BaseLayout
+  title="New patients"
+  description="What to expect at your first visit to S+ Dental in Mountlake Terrace, WA: a 1 to 1½ hour comprehensive exam, x-rays, insurance verification and the new patient forms."
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>New patients</h1>
+      <p class="lead">
+        We welcome new patients. We believe in thorough care, so your first visit is a full
+        comprehensive exam. Here's how to get ready.
+      </p>
+    </div>
+  </header>
+
+  <section class="band band-surface" aria-labelledby="first-visit">
+    <div class="wrap split">
+      <h2 id="first-visit">Your first visit</h2>
+      <ol class="steps">
+        {
+          steps.map((s) => (
+            <li>
+              <h3>{s.title}</h3>
+              <p>{s.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="forms">
+    <div class="wrap split">
+      <h2 id="forms">Forms</h2>
+      <div>
+        <p>
+          Download the new patient packet, fill it out at home, and bring it to your appointment.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href={practice.links.newPatientPacket} rel="noopener"
+            >Open the new patient packet (PDF)</a
+          >
+          <a class="btn btn-secondary" href={practice.links.booking} rel="noopener"
+            >Book your first visit</a
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-surface" aria-labelledby="insurance">
+    <div class="wrap split">
+      <h2 id="insurance">Insurance</h2>
+      <div>
+        <p>
+          Please send us your insurance information before your appointment so we can verify your
+          coverage for the visit.
+        </p>
+        <OwnerInput
+          id="insurance"
+          needed="Which dental insurance plans/networks S+ Dental is in-network with (or a statement that the office will bill any PPO plan as out-of-network), and whether Medicaid/Apple Health is accepted."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="financing">
+    <div class="wrap split">
+      <h2 id="financing">Payment and financing</h2>
+      <div>
+        <OwnerInput
+          id="financing"
+          needed="Accepted payment methods, and any financing options (third-party financing provider and/or in-house payment plans, membership plan for uninsured patients). The current site says 'Coming soon'."
+        >
+          <p>
+            Financing options are coming soon. To talk about payment for your treatment, call us at{' '}
+            <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+          </p>
+        </OwnerInput>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+    display: grid;
+    gap: 28px;
+  }
+
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 60px;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: -2px;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .steps h3 {
+    margin-bottom: 6px;
+  }
+
+  .steps p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+</style>
