@@ -15,3 +15,6 @@ dist/
 service-account*.json
 .firebase/
 .DS_Store
+
+# OAuth client downloads from the Cloud Console
+client_secret*.json
