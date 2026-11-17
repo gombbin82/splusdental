@@ -1,6 +1,6 @@
 # Architecture (proposed)
 
-Status: **draft** — open decisions at the bottom. Update this doc as decisions land.
+Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 
 ```
                 ┌───────────────────────────────┐
@@ -42,16 +42,20 @@ Status: **draft** — open decisions at the bottom. Update this doc as decisions
   Identity Federation for GitHub Actions deploys (no SA keys).
 - **CI/CD** — GitHub Actions: lint/test on PR; deploy staging on merge to `main`; deploy prod on tag/manual.
 
-## Open decisions
-| # | Question | Default if undecided |
-|---|----------|----------------------|
-| 1 | GCP project: reuse `splusdental` (shared with kiwidental dev) or a dedicated project? | Dedicated project for the practice's production web presence |
-| 2 | Environments | prod + staging (`staging.splus.dental`) |
-| 3 | Site framework | Astro (static) |
-| 4 | API framework | Node 22 + TypeScript + Hono |
-| 5 | Edge | Firebase Hosting |
-| 6 | Who may use admin | any verified `@splus.dental` account; allowlist later |
-| 7 | Stripe account | confirm practice has one, owned by the business, test mode until go-live |
+## Decisions (issue #2, 2026-11-16)
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | GCP project | **Reuse `splusdental`** (shared with kiwidental dev and other workloads). Region `us-west1`. All resources for this repo are prefixed `splus-web` (or `splusweb` where hyphens aren't allowed) and Terraform only manages its own resources — never import or modify kiwidental's. |
+| 2 | Environments | **prod + staging** in the same project: separate Cloud Run services (`splus-web-api-prod`, `splus-web-api-staging`), separate Firebase Hosting sites, separate secrets (`splus-web-<env>-…`). `staging.splus.dental` is `noindex`. |
+| 3 | Site framework | **Astro** (static output) in `site/`. |
+| 4 | API | **Node 22 + TypeScript + Hono** on Cloud Run in `api/`. |
+| 5 | Edge | **Firebase Hosting** (managed SSL apex + www, `/api/**` rewrite to Cloud Run). |
+| 6 | Admin access | Any **verified `@splus.dental`** account (server checks `email_verified` and `hd`); allowlist/roles later. |
+| 7 | OAuth consent screen | **External** — the project is not under a `splus.dental` Cloud org (owned by a personal account). Security is unchanged because the server enforces `hd == "splus.dental"`; the `hd` hint on the button is UX only. Revisit if the project moves into a Workspace org. |
+| 8 | Stripe account | Pending owner (issue #9). Test mode until go-live. |
+| 9 | Tooling | **pnpm** workspaces (via corepack), TypeScript strict, ESLint + Prettier, `terraform fmt`/`validate` + tflint; GitHub Actions CI on every PR. |
+| 10 | Terraform state | GCS bucket `splusdental-tfstate` (versioned), prefixes `splus-web/<env>`; bootstrapped separately. |
+| 11 | CI/CD auth | Dedicated Workload Identity pool for this repo (restricted to `gombbin82/splusdental`); no service-account keys. Existing pools (`github`, `splus-pool`, `my-pool`) are left alone. |
 
 ## Prototype
 `prototype/` holds a first-pass static HTML/CSS redesign and admin UI mockup written before the stack was
