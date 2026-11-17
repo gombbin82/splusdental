@@ -12,8 +12,9 @@ export const SITE_URL = 'https://splus.dental';
 
 export const practice = {
   name: 'S+ Dental',
-  tagline: 'Your neighborhood dentist in Mountlake Terrace and Lynnwood',
   opened: 'June 2023',
+  foundingDate: '2023-06',
+  areaServed: ['Mountlake Terrace', 'Lynnwood'],
   phone: {
     display: '(425) 616-2331',
     tel: '+14256162331',
@@ -37,11 +38,12 @@ export const practice = {
   dentist: {
     name: 'Dr. Stephanie Kang',
     credential: 'DMD',
+    school: 'Tufts University School of Dental Medicine',
   },
 } as const;
 
-/** One line, e.g. "21005 44th Ave W, Ste 103, Mountlake Terrace, WA 98043". */
-export const addressOneLine = `${practice.address.street}, ${practice.address.suite}, ${practice.address.city}, ${practice.address.region} ${practice.address.postalCode}`;
+/** One line, Google Business Profile format: "21005 44th Ave W Ste 103, Mountlake Terrace, WA 98043". */
+export const addressOneLine = `${practice.address.street} ${practice.address.suite}, ${practice.address.city}, ${practice.address.region} ${practice.address.postalCode}`;
 
 /** Map embed (no API key): the classic `output=embed` URL. */
 export const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(
@@ -74,87 +76,70 @@ export const hours: HoursRow[] = [
   { days: 'Sunday & Monday', hours: 'Closed' },
 ];
 
-export interface Service {
-  name: string;
-  /** Plain-language description of what the service is (general, not a clinical claim). */
-  blurb: string;
-}
-
 export interface ServiceGroup {
   title: string;
-  services: Service[];
+  services: string[];
 }
 
-/** The services listed on the current site, grouped for readability. */
+/** The 12 services listed on the current site, lightly grouped. Names only — no clinical claims. */
 export const serviceGroups: ServiceGroup[] = [
   {
-    title: 'Exams and prevention',
-    services: [
-      {
-        name: 'Comprehensive dental exam',
-        blurb: 'A thorough first look at your teeth and gums, with a plan made for you.',
-      },
-      {
-        name: 'Preventive care',
-        blurb: 'Regular cleanings and check-ups to keep small problems small.',
-      },
-      {
-        name: 'Deep cleaning',
-        blurb: 'Cleaning below the gumline when gums need more than a routine cleaning.',
-      },
-      { name: '3D x-ray', blurb: 'Detailed three-dimensional imaging taken in the office.' },
-    ],
+    title: 'Exams and cleanings',
+    services: ['Comprehensive dental exam', 'Preventive care', 'Deep cleaning', '3D x-ray'],
   },
   {
-    title: 'Repairing teeth',
-    services: [
-      { name: 'Dental fillings', blurb: 'Repair teeth damaged by cavities.' },
-      { name: 'Crowns and bridges', blurb: 'Cover a weakened tooth or bridge a gap.' },
-      {
-        name: 'Root canal treatment',
-        blurb: 'Treat infection inside a tooth so the tooth can be kept.',
-      },
-      { name: 'Extractions', blurb: 'Remove a tooth when it cannot be saved.' },
-    ],
+    title: 'Restoring teeth',
+    services: ['Dental fillings', 'Crowns and bridges', 'Root canal treatment', 'Extractions'],
   },
   {
     title: 'Replacing teeth',
-    services: [
-      { name: 'Dental implants', blurb: 'A long-term replacement for a missing tooth.' },
-      {
-        name: 'Full and partial dentures',
-        blurb: 'Removable replacements for some or all of your teeth.',
-      },
-    ],
+    services: ['Dental implants', 'Full and partial dentures'],
   },
   {
-    title: 'Straighter, brighter smiles',
-    services: [
-      { name: 'Clear aligners', blurb: 'Straighten teeth with removable clear trays.' },
-      { name: 'Teeth whitening', blurb: 'Lighten stained or discolored teeth.' },
-    ],
+    title: 'Cosmetic and alignment',
+    services: ['Teeth whitening', 'Clear aligners'],
   },
 ];
 
-/** Primary navigation, in display order. */
+/** Primary navigation, in display order (mirrors the current site). */
 export const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About us' },
   { href: '/services', label: 'Services' },
-  { href: '/about', label: 'About' },
   { href: '/new-patients', label: 'New patients' },
-  { href: '/reviews', label: 'Reviews' },
-  { href: '/patient-resources', label: 'Resources' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/patient-resources', label: 'Patient resources' },
+  { href: '/contact', label: 'Contact us' },
 ] as const;
 
-/** schema.org `Dentist` structured data for the home page. */
-export function dentistJsonLd(): Record<string, unknown> {
+/** Stable @id values so the JSON-LD nodes on different pages refer to the same entities. */
+const ORG_ID = `${SITE_URL}/#dentist`;
+const DOCTOR_ID = `${SITE_URL}/about#dr-kang`;
+
+/**
+ * schema.org `Dentist` (a LocalBusiness) structured data. Rendered on every page.
+ * Pass `withServices` on /services to list the services as offers.
+ * No geo coordinates, ratings or review counts: only facts the practice has published.
+ */
+export function dentistJsonLd({ withServices = false } = {}): Record<string, unknown> {
+  const doctor = {
+    '@type': 'Person',
+    '@id': DOCTOR_ID,
+    name: practice.dentist.name,
+    honorificSuffix: practice.dentist.credential,
+    jobTitle: 'Dentist',
+    alumniOf: { '@type': 'CollegeOrUniversity', name: practice.dentist.school },
+  };
   return {
     '@context': 'https://schema.org',
     '@type': 'Dentist',
+    '@id': ORG_ID,
     name: practice.name,
     url: `${SITE_URL}/`,
+    logo: `${SITE_URL}/logo.png`,
+    image: `${SITE_URL}/og-image.png`,
     telephone: practice.phone.schema,
     email: practice.email,
+    foundingDate: practice.foundingDate,
     address: {
       '@type': 'PostalAddress',
       streetAddress: `${practice.address.street} ${practice.address.suite}`,
@@ -163,6 +148,10 @@ export function dentistJsonLd(): Record<string, unknown> {
       postalCode: practice.address.postalCode,
       addressCountry: practice.address.country,
     },
+    areaServed: practice.areaServed.map((name) => ({
+      '@type': 'City',
+      name: `${name}, ${practice.address.region}`,
+    })),
     hasMap: practice.links.googleMaps,
     openingHoursSpecification: hours.flatMap((row) =>
       row.schema
@@ -176,11 +165,43 @@ export function dentistJsonLd(): Record<string, unknown> {
           ]
         : [],
     ),
-    founder: {
-      '@type': 'Person',
-      name: practice.dentist.name,
-      honorificSuffix: practice.dentist.credential,
-    },
-    sameAs: [practice.links.facebook],
+    founder: doctor,
+    employee: doctor,
+    sameAs: [practice.links.facebook, practice.links.googleMaps],
+    ...(withServices
+      ? {
+          makesOffer: serviceGroups.flatMap((g) =>
+            g.services.map((name) => ({
+              '@type': 'Offer',
+              itemOffered: { '@type': 'Service', name },
+            })),
+          ),
+        }
+      : {}),
+  };
+}
+
+/** schema.org `WebSite` for the home page. */
+export function websiteJsonLd(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
+    name: practice.name,
+    url: `${SITE_URL}/`,
+    publisher: { '@id': ORG_ID },
+    inLanguage: 'en-US',
+  };
+}
+
+/** schema.org `BreadcrumbList`: Home > page. */
+export function breadcrumbJsonLd(name: string, path: string): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name, item: `${SITE_URL}${path}` },
+    ],
   };
 }

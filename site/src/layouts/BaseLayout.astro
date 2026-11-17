@@ -1,9 +1,12 @@
 ---
 import '../styles/global.css';
-import fontUrl from '@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2?url';
+import '@fontsource/merriweather/latin-400.css';
+import '@fontsource/merriweather/latin-700.css';
+import '@fontsource/merriweather/latin-700-italic.css';
+import fontUrl from '@fontsource/merriweather/files/merriweather-latin-400-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_URL, practice } from '../data/practice';
+import { SITE_URL, breadcrumbJsonLd, dentistJsonLd, practice } from '../data/practice';
 import { noindex as noindexBuild } from '../lib/env';
 
 interface Props {
@@ -14,18 +17,37 @@ interface Props {
   fullTitle?: boolean;
   /** Exclude this page from search engines regardless of environment (e.g. /thank-you). */
   noindex?: boolean;
-  /** Structured data objects rendered as JSON-LD. */
+  /** Extra structured data objects rendered as JSON-LD (the Dentist node is always included). */
   jsonLd?: Record<string, unknown>[];
+  /** Breadcrumb label for subpages; adds a BreadcrumbList (Home > label). */
+  breadcrumb?: string;
+  /** List the services as offers in the Dentist JSON-LD (/services). */
+  withServices?: boolean;
 }
 
-const { title, description, fullTitle = false, noindex = false, jsonLd = [] } = Astro.props;
+const {
+  title,
+  description,
+  fullTitle = false,
+  noindex = false,
+  jsonLd = [],
+  breadcrumb,
+  withServices = false,
+} = Astro.props;
 
 const pageTitle = fullTitle ? title : `${title} | ${practice.name}`;
 const path = Astro.url.pathname.replace(/\/$/, '');
 const canonical = `${SITE_URL}${path || '/'}`;
 const robotsNoindex = noindexBuild || noindex;
+const ogImage = `${SITE_URL}/og-image.png`;
+const structuredData = noindex
+  ? []
+  : [
+      dentistJsonLd({ withServices }),
+      ...(breadcrumb ? [breadcrumbJsonLd(breadcrumb, path)] : []),
+      ...jsonLd,
+    ];
 
-const fontFace = `@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-display:swap;font-weight:400 900;src:url(${fontUrl}) format('woff2-variations'),url(${fontUrl}) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}`;
 ---
 
 <!doctype html>
@@ -37,8 +59,8 @@ const fontFace = `@font-face{font-family:'Schibsted Grotesk';font-style:normal;f
     <meta name="description" content={description} />
     {!noindex && <link rel="canonical" href={canonical} />}
     {robotsNoindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#0b5e6b" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#635952" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={practice.name} />
@@ -46,16 +68,26 @@ const fontFace = `@font-face{font-family:'Schibsted Grotesk';font-style:normal;f
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="en_US" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="S+ Dental, general dentistry in Mountlake Terrace, Washington"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
-    <style set:html={fontFace} />
     <script is:inline>
       document.documentElement.classList.add('js');
     </script>
 
     {
-      jsonLd.map((data) => (
+      structuredData.map((data) => (
         <script type="application/ld+json" set:html={JSON.stringify(data)} />
       ))
     }

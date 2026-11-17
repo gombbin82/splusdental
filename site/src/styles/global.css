@@ -1,32 +1,31 @@
 /*
  * S+ Dental — public site styles.
- * Tokens: cool paper + deep teal ink, one gold accent reserved for the "+" (the rank mark).
+ * Palette and type follow the original Google Sites theme (sampled 2026-11-16):
+ * warm brown and taupe bands, navy/blue accents, Merriweather throughout.
  */
 :root {
-  --paper: #f3f7f7;
-  --surface: #ffffff;
-  --ink: #0f2730;
-  --ink-soft: #3a525c;
-  --teal: #0b5e6b;
-  --teal-deep: #073f48;
-  --mint: #dbede9;
-  --gold: #e9a93a;
-  --gold-ink: #7a4f06;
-  --line: #c9dadb;
-  --focus: #b4560b;
+  --white: #ffffff;
+  --ink: #212121; /* body text on light bands */
+  --ink-soft: #4a4a4a;
+  --brown: #635952; /* main content band (white text, 6.8:1) */
+  --taupe: #dad3cd; /* alternate band (dark text) */
+  --taupe-line: #c4bab2;
+  --navy: #073763; /* "WELCOME TO S+ DENTAL" headline, links on light bands */
+  --blue: #3458a6; /* logo blue, accent bars */
+  --banner: #222222; /* page title banner */
+  --focus: #f2b134;
 
-  --font: 'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font: 'Merriweather', Georgia, 'Times New Roman', serif;
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
-  --step-1: 1.3125rem;
-  --step-2: 1.75rem;
-  --step-3: clamp(2rem, 4.2vw, 2.75rem);
-  --step-4: clamp(2.5rem, 6.5vw, 4.25rem);
+  --step-1: 1.25rem;
+  --step-2: clamp(1.5rem, 2.6vw, 2rem);
+  --step-3: clamp(1.9rem, 3.6vw, 2.6rem);
+  --step-4: clamp(2.6rem, 8vw, 5.6rem);
 
   --gutter: 16px;
-  --measure: 66ch;
-  --r-sm: 6px;
-  --r-lg: 18px;
+  --measure: 70ch;
+  --r: 4px;
 
   color-scheme: light;
 }
@@ -50,12 +49,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--white);
   color: var(--ink);
   font-family: var(--font);
   font-size: var(--step-0);
-  line-height: 1.6;
-  font-optical-sizing: auto;
+  line-height: 1.75;
 }
 
 img,
@@ -65,53 +63,49 @@ iframe {
   display: block;
 }
 
+img {
+  height: auto;
+}
+
 h1,
 h2,
 h3 {
-  line-height: 1.1;
-  margin: 0 0 0.5em;
+  line-height: 1.2;
+  margin: 0 0 0.6em;
+  font-weight: 700;
   text-wrap: balance;
 }
 
 h1 {
-  font-size: var(--step-4);
-  font-weight: 800;
-  letter-spacing: -0.035em;
+  font-size: var(--step-3);
 }
 
 h2 {
-  font-size: var(--step-3);
-  font-weight: 750;
-  letter-spacing: -0.025em;
+  font-size: var(--step-2);
 }
 
 h3 {
   font-size: var(--step-1);
-  font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 p {
   margin: 0 0 1em;
-  max-width: var(--measure);
   text-wrap: pretty;
 }
 
 a {
-  color: var(--teal);
+  color: var(--navy);
   text-underline-offset: 0.18em;
   text-decoration-thickness: 1px;
 }
 
 a:hover {
-  color: var(--teal-deep);
   text-decoration-thickness: 2px;
 }
 
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 main:focus {
@@ -119,18 +113,21 @@ main:focus {
 }
 
 .wrap {
-  width: min(1120px, 100% - 2 * var(--gutter));
+  width: min(1150px, 100% - 2 * var(--gutter));
   margin-inline: auto;
 }
 
-.lead {
-  font-size: var(--step-1);
-  line-height: 1.5;
-  color: var(--ink-soft);
+.narrow {
+  width: min(820px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
 }
 
-.muted {
-  color: var(--ink-soft);
+.center {
+  text-align: center;
+}
+
+.center p {
+  margin-inline: auto;
 }
 
 .visually-hidden {
@@ -153,8 +150,7 @@ main:focus {
   background: var(--ink);
   color: #fff;
   padding: 10px 16px;
-  border-radius: var(--r-sm);
-  font-weight: 600;
+  border-radius: var(--r);
 }
 
 .skip-link:focus {
@@ -162,131 +158,125 @@ main:focus {
   color: #fff;
 }
 
-/* Buttons */
+/* Bands: the original site's full-width colored sections */
+.band {
+  padding: 48px 0;
+}
+
+@media (min-width: 900px) {
+  .band {
+    padding: 64px 0;
+  }
+}
+
+.band-brown {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.band-brown a {
+  color: var(--white);
+}
+
+.band-taupe {
+  background: var(--taupe);
+  color: var(--ink);
+}
+
+.band-white {
+  background: var(--white);
+}
+
+/* Buttons: outlined, as on the original site */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 12px 22px;
-  border-radius: var(--r-sm);
-  border: 2px solid var(--teal);
+  min-height: 46px;
+  padding: 10px 28px;
+  border: 1px solid currentColor;
+  border-radius: var(--r);
   font: inherit;
-  font-weight: 650;
-  line-height: 1.2;
+  font-weight: 700;
+  font-size: var(--step-0);
+  line-height: 1.3;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-.btn-primary {
-  background: var(--teal);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: var(--teal-deep);
-  border-color: var(--teal-deep);
-  color: #fff;
-}
-
-.btn-secondary {
+.band-brown .btn,
+.btn-light {
+  color: var(--white);
+  border-color: var(--white);
   background: transparent;
-  color: var(--teal-deep);
 }
 
-.btn-secondary:hover {
-  background: var(--mint);
-  color: var(--teal-deep);
+.band-brown .btn:hover,
+.btn-light:hover {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.band-taupe .btn,
+.band-white .btn,
+.btn-dark {
+  color: var(--navy);
+  border-color: var(--navy);
+  background: transparent;
+}
+
+.band-taupe .btn:hover,
+.band-white .btn:hover,
+.btn-dark:hover {
+  background: rgb(7 55 99 / 0.08);
+}
+
+.btn-wide {
+  width: min(100%, 366px);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 24px;
 }
 
-/* Page sections */
-.page-head {
-  padding: 56px 0 32px;
+.center .actions {
+  justify-content: center;
 }
 
-.page-head .lead {
-  margin-bottom: 0;
-}
-
-.band {
-  padding: 56px 0;
-}
-
-.band + .band {
-  border-top: 1px solid var(--line);
-}
-
-.band-surface {
-  background: var(--surface);
-}
-
-@media (min-width: 900px) {
-  .page-head {
-    padding: 88px 0 40px;
-  }
-
-  .band {
-    padding: 80px 0;
-  }
-}
-
+/* Two-column layout used on About/New patients */
 .split {
   display: grid;
-  gap: 40px;
+  gap: 32px;
+  align-items: start;
 }
 
 @media (min-width: 900px) {
   .split {
-    grid-template-columns: 5fr 7fr;
-    gap: 72px;
-    align-items: start;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+
+  .split-wide-left {
+    grid-template-columns: 3fr 2fr;
+  }
+
+  .split-wide-right {
+    grid-template-columns: 2fr 3fr;
   }
 }
 
-/* Plain lists of facts */
-.facts {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 4px;
+.photo {
+  width: 100%;
+  object-fit: cover;
 }
 
-.facts a {
-  font-weight: 600;
-}
-
-/* Content prose */
-.prose > * + * {
-  margin-top: 0;
-}
-
-.prose ul {
-  padding-left: 1.2em;
-  max-width: var(--measure);
-}
-
-.prose li + li {
-  margin-top: 0.4em;
-}
-
-/* Callout used for "next step" boxes */
-.callout {
-  background: var(--mint);
-  border-radius: var(--r-lg);
-  padding: 28px;
-}
-
-.callout > :last-child {
-  margin-bottom: 0;
+.lead {
+  font-size: var(--step-1);
+  line-height: 1.7;
 }
 
 @media (prefers-reduced-motion: reduce) {

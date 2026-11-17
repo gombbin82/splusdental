@@ -1,0 +1,81 @@
+<!doctype html>
+<!--
+  Source for site/public/og-image.png (1200x630 social preview). Regenerate from the repo root with:
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+    --window-size=1200,630 --screenshot=site/public/og-image.png site/scripts/og-image.html
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Merriweather';
+        font-weight: 700;
+        src: url('../node_modules/@fontsource/merriweather/files/merriweather-latin-700-normal.woff2')
+          format('woff2');
+      }
+      @font-face {
+        font-family: 'Merriweather';
+        font-weight: 400;
+        src: url('../node_modules/@fontsource/merriweather/files/merriweather-latin-400-normal.woff2')
+          format('woff2');
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+      body {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        align-items: center;
+        gap: 56px;
+        padding: 0 90px;
+        box-sizing: border-box;
+        background: #635952;
+        color: #fff;
+        font-family: 'Merriweather', Georgia, serif;
+        border-bottom: 18px solid #3458a6;
+      }
+      .logo {
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #fff;
+      }
+      .logo img {
+        width: 316px;
+        height: 300px;
+        margin-left: -8px;
+        display: block;
+      }
+      h1 {
+        font-size: 86px;
+        margin: 0 0 18px;
+        line-height: 1.05;
+      }
+      p {
+        font-size: 31px;
+        margin: 0 0 12px;
+        line-height: 1.35;
+      }
+      .small {
+        font-size: 28px;
+        opacity: 0.92;
+        margin-top: 26px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo"><img src="../src/assets/logo.jpg" alt="" /></div>
+    <div>
+      <h1>S+ Dental</h1>
+      <p>General dentistry in Mountlake Terrace, WA</p>
+      <p>Dr. Stephanie Kang, DMD</p>
+      <p class="small">(425) 616-2331 · splus.dental</p>
+    </div>
+  </body>
+</html>

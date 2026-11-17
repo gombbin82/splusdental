@@ -1,117 +1,119 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HoursTable from '../components/HoursTable.astro';
-import SPlusMark from '../components/SPlusMark.astro';
-import { addressOneLine, dentistJsonLd, practice, serviceGroups } from '../data/practice';
+import { mapEmbedUrl, practice, websiteJsonLd } from '../data/practice';
+import operatory from '../assets/photos/office-operatory.jpg';
+import drKangAtWork from '../assets/photos/dr-kang-at-work.jpg';
+import patient from '../assets/photos/dental-patient.jpg';
+import forms from '../assets/photos/new-patient-forms.jpg';
 
-const allServices = serviceGroups.flatMap((g) => g.services.map((s) => s.name));
+const tiles = [
+  {
+    href: '/about',
+    label: 'About us',
+    img: drKangAtWork,
+    alt: 'Dr. Stephanie Kang treating a patient at S+ Dental',
+  },
+  {
+    href: '/services',
+    label: 'Services',
+    img: patient,
+    alt: 'A smiling patient during a dental cleaning',
+  },
+  {
+    href: '/new-patients',
+    label: 'New patients',
+    img: forms,
+    alt: 'A patient filling out new patient forms',
+  },
+];
 ---
 
 <BaseLayout
-  title="S+ Dental | Dentist in Mountlake Terrace & Lynnwood, WA"
+  title="Dentist in Mountlake Terrace, WA | S+ Dental"
   fullTitle
-  description="S+ Dental is a neighborhood general dentistry office in Mountlake Terrace, WA, led by Dr. Stephanie Kang, DMD. Thorough exams, preventive care, crowns, implants, clear aligners and more. New patients welcome."
-  jsonLd={[dentistJsonLd()]}
+  description="S+ Dental is a general dentist in Mountlake Terrace, WA, serving the Lynnwood area. Dr. Stephanie Kang, DMD. New patients welcome. Book online today."
+  jsonLd={[websiteJsonLd()]}
 >
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div class="hero-copy">
-        <p class="welcome">New patients welcome</p>
-        <h1>Thorough, unhurried dental care in Mountlake Terrace.</h1>
-        <p class="lead">
-          S+ Dental is your neighborhood dental office for Mountlake Terrace and Lynnwood. Dr.
-          Stephanie Kang takes the time to explain what's going on with your teeth, so you leave
-          understanding your plan and why it matters.
-        </p>
-        <div class="actions">
-          <a class="btn btn-primary" href={practice.links.booking} rel="noopener"
-            >Make an appointment</a
-          >
-          <a class="btn btn-secondary" href={`tel:${practice.phone.tel}`}
-            >Call {practice.phone.display}</a
-          >
-        </div>
-      </div>
-
-      <figure class="rank">
-        <SPlusMark size={220} class="rank-mark" />
-        <figcaption>
-          <strong>Why “S+”?</strong> In game ranking systems, S+ is the top tier, earned for superb
-          performance. It's the standard Dr. Kang sets for every visit.
-        </figcaption>
-      </figure>
-    </div>
+  <section class="hero" aria-labelledby="hero-heading">
+    <Image
+      class="hero-img"
+      src={operatory}
+      alt="A treatment room at S+ Dental with a dental chair and equipment"
+      widths={[480, 800, 1280, 1536]}
+      quality={70}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <h1 id="hero-heading">Welcome to <span>S+ Dental</span></h1>
   </section>
 
-  <section class="band band-surface" aria-labelledby="visit-heading">
-    <div class="wrap split">
-      <div>
-        <h2 id="visit-heading">Visit us</h2>
-        <ul class="facts">
+  <section class="band band-brown center" aria-label="Welcome">
+    <div class="narrow">
+      <a class="btn btn-wide" href={practice.links.booking} rel="noopener">Make an appointment</a>
+      <p class="welcome">
+        S+ Dental is your neighborhood oral health provider in the Mountlake Terrace and Lynnwood
+        area. We strive to provide the utmost care for our patients, and our goal is to help you
+        achieve and maintain good oral health for a healthier life.
+      </p>
+    </div>
+
+    <ul class="wrap tiles">
+      {
+        tiles.map((t) => (
           <li>
-            <a href={practice.links.googleMaps} rel="noopener">{addressOneLine}</a>
+            <Image
+              class="photo"
+              src={t.img}
+              alt={t.alt}
+              widths={[300, 400]}
+              sizes="(min-width: 900px) 360px, 100vw"
+            />
+            <a class="btn" href={t.href}>
+              {t.label}
+            </a>
           </li>
-          <li><a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a></li>
-          <li><a href={`mailto:${practice.email}`}>{practice.email}</a></li>
-        </ul>
-        <div class="actions">
-          <a class="btn btn-primary" href={practice.links.booking} rel="noopener">Book online</a>
-          <a class="btn btn-secondary" href="/contact">Directions and map</a>
-        </div>
-      </div>
-      <HoursTable />
-    </div>
+        ))
+      }
+    </ul>
   </section>
 
-  <section class="band" aria-labelledby="services-heading">
-    <div class="wrap split">
-      <div>
-        <h2 id="services-heading">Care for the whole mouth, in one office</h2>
-        <p class="muted">
-          From your first comprehensive exam to implants and clear aligners, most care happens
-          right here.
-        </p>
-        <p><a href="/services">See all services</a></p>
-      </div>
-      <ul class="service-cloud">
-        {allServices.map((name) => <li>{name}</li>)}
-      </ul>
-    </div>
-  </section>
-
-  <section class="band band-surface" aria-labelledby="first-heading">
-    <div class="wrap split">
-      <div>
-        <h2 id="first-heading">Your first visit</h2>
-      </div>
-      <div>
-        <p>
-          Your first appointment is a comprehensive exam with x-rays and takes about 1 to 1½ hours.
-          Afterward, we'll make a plan tailored to your needs, including the right type of
-          cleaning.
-        </p>
-        <p>
-          <a href="/new-patients">What to bring and how to prepare</a>
-        </p>
+  <section class="band band-taupe center" aria-labelledby="reviews-heading">
+    <div class="narrow">
+      <h2 id="reviews-heading">Patient reviews</h2>
+      <p>See what our patients say about their visits to S+ Dental on Google.</p>
+      <div class="actions">
+        <a class="btn" href={practice.links.googleMaps} rel="noopener">Read our Google reviews</a>
       </div>
     </div>
   </section>
 
-  <section class="band" aria-labelledby="dr-heading">
-    <div class="wrap split">
-      <div>
-        <h2 id="dr-heading">Meet Dr. Stephanie Kang, DMD</h2>
-      </div>
-      <div>
-        <p>
-          A Tufts-trained dentist, Dr. Kang spent years caring for patients at community health
-          centers and tribal clinics across Washington before opening S+ Dental in June 2023.
+  <section class="band band-white" aria-labelledby="location-heading">
+    <div class="wrap split visit">
+      <iframe
+        class="map"
+        title="Map showing S+ Dental at 21005 44th Ave W, Mountlake Terrace, WA"
+        src={mapEmbedUrl}
+        width="560"
+        height="420"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="center location">
+        <p class="new"><em>Brand-new dental office! We welcome new patients!</em></p>
+        <h2 id="location-heading">Location and hours</h2>
+        <address>
+          {`${practice.address.street} ${practice.address.suite}`}<br />
+          {`${practice.address.city}, ${practice.address.region} ${practice.address.postalCode}`}
+        </address>
+        <HoursTable align="center" />
+        <p class="contact">
+          <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a><br />
+          <a href={`mailto:${practice.email}`}>{practice.email}</a>
         </p>
-        <p><a href="/about">About Dr. Kang and S+ Dental</a></p>
         <p>
-          Patients tell us they appreciate clear explanations and an unrushed visit. <a
-            href="/reviews">Read patient reviews</a
-          >
+          <a href={practice.links.facebook} rel="noopener">Follow S+ Dental on Facebook</a>
         </p>
       </div>
     </div>
@@ -120,87 +122,110 @@ const allServices = serviceGroups.flatMap((g) => g.services.map((s) => s.name));
 
 <style>
   .hero {
-    padding: 48px 0 56px;
-    background:
-      radial-gradient(60rem 30rem at 100% 0, var(--mint), transparent 70%),
-      var(--paper);
-  }
-
-  .hero-grid {
+    position: relative;
     display: grid;
-    gap: 40px;
-    align-items: center;
+    place-items: center;
+    min-height: clamp(300px, 46vw, 560px);
+    overflow: hidden;
+    background: #d9d5cf;
   }
 
-  @media (min-width: 900px) {
-    .hero {
-      padding: 88px 0 96px;
-    }
-
-    .hero-grid {
-      grid-template-columns: 7fr 4fr;
-      gap: 64px;
-    }
+  .hero :global(.hero-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 62%;
   }
 
-  .welcome {
-    display: inline-block;
-    margin-bottom: 20px;
-    padding: 4px 12px;
-    border-radius: var(--r-sm);
-    background: #fff4dc;
-    color: var(--gold-ink);
-    font-weight: 650;
-    font-size: var(--step--1);
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(closest-side, rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.15));
   }
 
   .hero h1 {
-    max-width: 14ch;
-  }
-
-  .rank {
+    position: relative;
+    z-index: 1;
     margin: 0;
-    display: grid;
-    justify-items: start;
-    gap: 20px;
+    padding: 0 var(--gutter);
+    text-align: center;
+    color: var(--navy);
+    font-size: var(--step-4);
+    font-weight: 700;
+    line-height: 1.15;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
   }
 
-  @media (min-width: 900px) {
-    .rank {
-      justify-items: center;
-      text-align: center;
+  .hero h1 span {
+    display: block;
+  }
+
+  .welcome {
+    margin-top: 40px;
+    font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+    line-height: 1.65;
+  }
+
+  .tiles {
+    list-style: none;
+    padding: 0;
+    margin-top: 40px;
+    margin-bottom: 0;
+    display: grid;
+    gap: 32px;
+  }
+
+  @media (min-width: 760px) {
+    .tiles {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
     }
   }
 
-  .rank :global(.rank-mark) {
-    width: clamp(140px, 36vw, 220px);
+  .tiles li {
+    display: grid;
+    gap: 20px;
+  }
+
+  .tiles :global(.photo) {
+    aspect-ratio: 1;
+  }
+
+  .tiles .btn {
+    width: 100%;
+  }
+
+  .visit {
+    align-items: center;
+  }
+
+  .map {
+    width: 100%;
     height: auto;
-    filter: drop-shadow(0 18px 30px rgb(7 63 72 / 0.22));
+    aspect-ratio: 4 / 3;
+    border: 0;
+    background: var(--taupe);
   }
 
-  .rank figcaption {
-    max-width: 30ch;
-    color: var(--ink-soft);
+  .location address {
+    font-style: normal;
+    margin-bottom: 16px;
   }
 
-  .rank strong {
-    color: var(--ink);
+  .new {
+    font-size: var(--step--1);
   }
 
-  .service-cloud {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+  .location h2 {
+    color: var(--navy);
+    font-style: italic;
   }
 
-  .service-cloud li {
-    padding: 8px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-sm);
-    background: var(--surface);
-    font-weight: 550;
+  .contact {
+    margin-top: 16px;
   }
 </style>
