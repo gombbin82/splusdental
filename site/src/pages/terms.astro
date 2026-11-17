@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBanner from '../components/PageBanner.astro';
+import { practice } from '../data/practice';
+
+const updated = 'November 17, 2026';
+---
+
+<BaseLayout
+  title="Terms of Use | S+ Dental, Mountlake Terrace"
+  fullTitle
+  breadcrumb="Terms of use"
+  description="Terms of use for the S+ Dental website and online payment links."
+>
+  <PageBanner title="Terms of use" />
+
+  <section class="band legal-text">
+    <div class="narrow">
+      <p><em>Last updated {updated}</em></p>
+
+      <h2>Information only</h2>
+      <p>
+        The content on this website is general information about {practice.name} and our services. It
+        is not medical or dental advice and does not create a dentist–patient relationship. For advice
+        about your own care, please contact us or schedule a visit.
+      </p>
+
+      <h2>Appointments and payments</h2>
+      <p>
+        Online booking is provided through Calendly; to change or cancel an appointment, please contact
+        us. Payment links we send are
+        processed by Stripe and are subject to Stripe's terms. If you believe a payment link or charge is
+        incorrect, contact us before paying.
+      </p>
+
+      <h2>Staff tools</h2>
+      <p>
+        The staff administration site is for authorized {practice.name} staff only. Access is logged and
+        may be revoked at any time.
+      </p>
+
+      <h2>Changes and contact</h2>
+      <p>
+        We may update these terms; the date above shows the latest version. Questions: email{' '}
+        <a href={`mailto:${practice.email}`}>{practice.email}</a> or call{' '}
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal-text .narrow {
+    text-align: left;
+  }
+  .legal-text h2 {
+    margin-top: 1.6em;
+  }
+</style>

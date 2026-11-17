@@ -30,7 +30,10 @@ const year = new Date().getFullYear();
       <a class="fb" href={practice.links.facebook} rel="noopener">S+ Dental on Facebook</a>
     </div>
   </div>
-  <p class="wrap legal">© {year} {practice.name}</p>
+  <p class="wrap legal">
+    © {year} {practice.name} · <a href="/privacy">Privacy policy</a> ·{' '}
+    <a href="/terms">Terms of use</a>
+  </p>
 </footer>
 
 <style>
