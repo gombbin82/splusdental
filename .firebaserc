@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "splusdental"
+  },
+  "targets": {
+    "splusdental": {
+      "hosting": {
+        "prod": ["splus-dental"],
+        "staging": ["splus-dental-staging"]
+      }
+    }
+  }
+}
