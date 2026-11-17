@@ -1,0 +1,117 @@
+---
+import SPlusMark from './SPlusMark.astro';
+import { addressOneLine, nav, practice } from '../data/practice';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap grid">
+    <div>
+      <p class="name">
+        <SPlusMark size={30} />
+        {practice.name}
+      </p>
+      <address>
+        <a href={practice.links.googleMaps} rel="noopener">{addressOneLine}</a><br />
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a><br />
+        <a href={`mailto:${practice.email}`}>{practice.email}</a>
+      </address>
+    </div>
+
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/">Home</a></li>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div>
+      <p>
+        <a class="btn btn-primary" href={practice.links.booking} rel="noopener">Book a visit</a>
+      </p>
+      <p><a href={practice.links.facebook} rel="noopener">S+ Dental on Facebook</a></p>
+    </div>
+  </div>
+  <div class="wrap legal">
+    <p>© {year} {practice.name}, {practice.address.city}, {practice.address.region}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--teal-deep);
+    color: #e3efee;
+    padding: 56px 0 24px;
+    margin-top: 0;
+  }
+
+  .site-footer a {
+    color: #fff;
+  }
+
+  .site-footer .btn-primary {
+    background: #fff;
+    color: var(--teal-deep);
+    border-color: #fff;
+  }
+
+  .site-footer .btn-primary:hover {
+    background: var(--mint);
+    border-color: var(--mint);
+  }
+
+  .site-footer :focus-visible {
+    outline-color: var(--gold);
+  }
+
+  .grid {
+    display: grid;
+    gap: 32px;
+  }
+
+  @media (min-width: 800px) {
+    .grid {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
+
+  .name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: var(--step-1);
+    color: #fff;
+  }
+
+  address {
+    font-style: normal;
+    line-height: 1.9;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .legal {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgb(255 255 255 / 0.18);
+    font-size: var(--step--1);
+  }
+
+  .legal p {
+    margin: 0;
+  }
+</style>

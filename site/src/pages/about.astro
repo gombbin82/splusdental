@@ -1,0 +1,183 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PhotoSlot from '../components/PhotoSlot.astro';
+import { practice } from '../data/practice';
+import { noindex } from '../lib/env';
+---
+
+<BaseLayout
+  title="About Dr. Stephanie Kang and S+ Dental"
+  description="Meet Dr. Stephanie Kang, DMD, and learn what the S+ in S+ Dental stands for. A general dentistry office in Mountlake Terrace, WA, opened in June 2023."
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>About S+ Dental</h1>
+      <p class="lead">
+        We opened in June 2023 with one goal: improve our community's quality of life by improving
+        oral health, so you can spend more time with family and friends and less time worrying
+        about dental problems.
+      </p>
+    </div>
+  </header>
+
+  <section class="band band-surface" aria-labelledby="name-heading">
+    <div class="wrap split">
+      <h2 id="name-heading">What “S+” means</h2>
+      <div>
+        <p>
+          Many people ask about our name. In game ranking systems, S+ is the top rank, given for
+          superb performance. Dr. Kang is an avid gamer who always aims for S rank, and she brings
+          that same drive for mastery to dentistry.
+        </p>
+        <p>
+          Our hope is that everyone who visits S+ Dental experiences something special, above and
+          beyond what they've known at the dentist before. We'll guide you toward what you need
+          and want for a healthy smile.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="mission-heading">
+    <div class="wrap split">
+      <h2 id="mission-heading">Our mission</h2>
+      <div>
+        <p>
+          S+ Dental aims to raise the quality of life in our community by providing top-notch,
+          customized dental care for every patient.
+        </p>
+        <p>
+          We also hope our patients become oral health ambassadors themselves, sharing what they
+          learn at their visits to help the people around them live healthier lives.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-surface" aria-labelledby="dr-heading">
+    <div class="wrap split">
+      <div>
+        <PhotoSlot
+          name="dr-kang-headshot"
+          description="Dr. Stephanie Kang headshot"
+          ratio="4 / 5"
+        />
+      </div>
+      <div>
+        <h2 id="dr-heading">{practice.dentist.name}, {practice.dentist.credential}</h2>
+        <p>
+          Dr. Kang earned her Doctor of Dental Medicine degree from Tufts University School of
+          Dental Medicine in Boston in 2012. She then completed a one-year Advanced Education in
+          General Dentistry (AEGD) residency at Lutheran Medical Center (now NYU Langone Health)
+          and practiced at a private dental office in the Greater Boston area.
+        </p>
+        <p>
+          A summer visit to Seattle made her fall in love with the city, and she moved here in 2015.
+          Since then she has cared for patients at community health centers and tribal clinics
+          across Washington, serving underserved communities. She enjoys building relationships
+          with patients and coworkers, and has taken locum posts as far away as Barrow, Alaska, and
+          La Push, Washington. Caring for so many different communities has given her broad
+          experience as a primary dental provider.
+        </p>
+        <ul class="creds">
+          <li>DMD, Tufts University School of Dental Medicine, 2012</li>
+          <li>AEGD residency, Lutheran Medical Center (now NYU Langone Health)</li>
+          <li>Practicing in Washington since 2015</li>
+        </ul>
+        <blockquote>
+          <p>
+            “Outside of dentistry, I enjoy spending time with family and friends, playing games,
+            drinking boba tea (with 30% sugar or less), watching K-dramas and challenging myself
+            with Chopin etudes piano music.”
+          </p>
+          <footer>Dr. Stephanie Kang</footer>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  {
+    /* Office photos: shown on staging only until real photos replace the slots (issue #9). */
+    noindex && (
+      <section class="band" aria-labelledby="team-heading">
+        <div class="wrap split">
+          <h2 id="team-heading">Our office</h2>
+          <div class="photos">
+            <PhotoSlot name="office-reception" description="Office reception / waiting area" />
+            <PhotoSlot name="office-operatory" description="Treatment room" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="band band-surface" aria-labelledby="cta-heading">
+    <div class="wrap">
+      <div class="callout">
+        <h2 id="cta-heading">Come meet us</h2>
+        <p>Let us support your S+ journey to better oral health.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href={practice.links.booking} rel="noopener"
+            >Make an appointment</a
+          >
+          <a class="btn btn-secondary" href="/new-patients">Plan your first visit</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .creds {
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .creds li {
+    padding-left: 22px;
+    position: relative;
+  }
+
+  .creds li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 10px;
+    height: 10px;
+    background: var(--gold);
+    clip-path: polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%);
+  }
+
+  blockquote {
+    margin: 32px 0 0;
+    padding: 24px 28px;
+    background: var(--mint);
+    border-radius: var(--r-lg);
+  }
+
+  blockquote p {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+
+  blockquote footer {
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .photos {
+    display: grid;
+    gap: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .photos {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,17 @@
+import type { APIRoute } from 'astro';
+import { noindex } from '../lib/env';
+
+export const GET: APIRoute = ({ site }) => {
+  const body = noindex
+    ? 'User-agent: *\nDisallow: /\n'
+    : [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        'Disallow: /thank-you',
+        '',
+        `Sitemap: ${new URL('sitemap-index.xml', site).href}`,
+        '',
+      ].join('\n');
+  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};

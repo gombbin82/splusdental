@@ -1,0 +1,299 @@
+/*
+ * S+ Dental — public site styles.
+ * Tokens: cool paper + deep teal ink, one gold accent reserved for the "+" (the rank mark).
+ */
+:root {
+  --paper: #f3f7f7;
+  --surface: #ffffff;
+  --ink: #0f2730;
+  --ink-soft: #3a525c;
+  --teal: #0b5e6b;
+  --teal-deep: #073f48;
+  --mint: #dbede9;
+  --gold: #e9a93a;
+  --gold-ink: #7a4f06;
+  --line: #c9dadb;
+  --focus: #b4560b;
+
+  --font: 'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3125rem;
+  --step-2: 1.75rem;
+  --step-3: clamp(2rem, 4.2vw, 2.75rem);
+  --step-4: clamp(2.5rem, 6.5vw, 4.25rem);
+
+  --gutter: 16px;
+  --measure: 66ch;
+  --r-sm: 6px;
+  --r-lg: 18px;
+
+  color-scheme: light;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  font-optical-sizing: auto;
+}
+
+img,
+svg,
+iframe {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.1;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-4);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  font-size: var(--step-3);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: var(--step-1);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 1em;
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--teal);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  color: var(--teal-deep);
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+main:focus {
+  outline: none;
+}
+
+.wrap {
+  width: min(1120px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+.lead {
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -100px;
+  z-index: 100;
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 12px;
+  color: #fff;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--teal);
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--teal);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--teal-deep);
+  border-color: var(--teal-deep);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--teal-deep);
+}
+
+.btn-secondary:hover {
+  background: var(--mint);
+  color: var(--teal-deep);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Page sections */
+.page-head {
+  padding: 56px 0 32px;
+}
+
+.page-head .lead {
+  margin-bottom: 0;
+}
+
+.band {
+  padding: 56px 0;
+}
+
+.band + .band {
+  border-top: 1px solid var(--line);
+}
+
+.band-surface {
+  background: var(--surface);
+}
+
+@media (min-width: 900px) {
+  .page-head {
+    padding: 88px 0 40px;
+  }
+
+  .band {
+    padding: 80px 0;
+  }
+}
+
+.split {
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 900px) {
+  .split {
+    grid-template-columns: 5fr 7fr;
+    gap: 72px;
+    align-items: start;
+  }
+}
+
+/* Plain lists of facts */
+.facts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.facts a {
+  font-weight: 600;
+}
+
+/* Content prose */
+.prose > * + * {
+  margin-top: 0;
+}
+
+.prose ul {
+  padding-left: 1.2em;
+  max-width: var(--measure);
+}
+
+.prose li + li {
+  margin-top: 0.4em;
+}
+
+/* Callout used for "next step" boxes */
+.callout {
+  background: var(--mint);
+  border-radius: var(--r-lg);
+  padding: 28px;
+}
+
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
