@@ -1,6 +1,6 @@
 // Payment links: recent-links table (full and compact) and the create dialog.
 import { inRange, toCents } from './money';
-import { $, api, handleAuthFailure, setText } from './shell';
+import { $, api, handleAuthFailure, setText, wireDialog } from './shell';
 
 export interface LinkRow {
   id: string;
@@ -50,7 +50,7 @@ function statusChip(active: boolean) {
 }
 
 /** Clone an icon button from a <template> in the shell. */
-function iconButton(tpl: 'tpl-copy' | 'tpl-deactivate') {
+function iconButton(tpl: 'tpl-copy' | 'tpl-deactivate' | 'tpl-email') {
   const t = $<HTMLTemplateElement>(tpl);
   return t.content.firstElementChild!.cloneNode(true) as HTMLButtonElement;
 }
@@ -58,7 +58,13 @@ function iconButton(tpl: 'tpl-copy' | 'tpl-deactivate') {
 export class LinksTable {
   constructor(
     private readonly body: HTMLElement,
-    private readonly opts: { limit: number; compact?: boolean; columns: number },
+    private readonly opts: {
+      limit: number;
+      compact?: boolean;
+      columns: number;
+      /** Show an "Email link" action on active links. */
+      onEmail?: (l: LinkRow) => void;
+    },
   ) {}
 
   private message(text: string) {
@@ -83,6 +89,11 @@ export class LinksTable {
     const copyBtn = iconButton('tpl-copy');
     copyBtn.addEventListener('click', () => void copyText(l.url, copyBtn));
     actions.append(copyBtn);
+    if (l.active && this.opts.onEmail) {
+      const mailBtn = iconButton('tpl-email');
+      mailBtn.addEventListener('click', () => this.opts.onEmail?.(l));
+      actions.append(mailBtn);
+    }
     if (l.active && !this.opts.compact) {
       const off = iconButton('tpl-deactivate');
       off.addEventListener('click', () => void this.deactivate(l, off));
@@ -182,6 +193,7 @@ export function initCreateDialog(onCreated: () => void) {
       singleUse: input('singleUse').checked,
       collectPhone: input('collectPhone').checked,
       askPatientName: input('askPatientName').checked,
+      holdForApproval: input('holdForApproval').checked,
     };
     if (type === 'fixed') {
       payload.amountCents = readMoney('amount', true, errors, 'Amount');
@@ -200,6 +212,14 @@ export function initCreateDialog(onCreated: () => void) {
       el.setAttribute('aria-invalid', String(!el.validity.valid));
       if (!el.validity.valid) errors.push(`${label} can only use letters, numbers, and # . - /`);
       if (v) payload[name] = v;
+    }
+    const emailEl = form.elements.namedItem('emailTo') as HTMLInputElement | null;
+    if (emailEl && !emailEl.closest('[hidden]')) {
+      const v = emailEl.value.trim();
+      const bad = v !== '' && !emailEl.validity.valid;
+      emailEl.setAttribute('aria-invalid', String(bad));
+      if (bad) errors.push('Enter a valid patient email, or leave it blank.');
+      if (v && !bad) payload.emailTo = v;
     }
     return errors.length ? { errors } : { payload, errors };
   };
@@ -240,7 +260,12 @@ export function initCreateDialog(onCreated: () => void) {
     const btn = $<HTMLButtonElement>('create-btn');
     btn.disabled = true;
     try {
-      const link = await api<{ url: string; amountDisplay: string }>('/api/payment-links', {
+      const link = await api<{
+        url: string;
+        amountDisplay: string;
+        emailed?: boolean;
+        emailError?: string;
+      }>('/api/payment-links', {
         method: 'POST',
         headers: { 'Idempotency-Key': pendingIdempotencyKey },
         body: JSON.stringify(payload),
@@ -250,6 +275,25 @@ export function initCreateDialog(onCreated: () => void) {
       a.href = link.url;
       a.textContent = link.url;
       $('result-amount').textContent = link.amountDisplay;
+      const emailNote = $('result-email');
+      emailNote.className = 'result-email';
+      if (payload.emailTo && link.emailed) {
+        emailNote.classList.add('is-ok');
+        setText($('result-email-text'), `Emailed to ${String(payload.emailTo)}`);
+        emailNote.hidden = false;
+      } else if (payload.emailTo) {
+        emailNote.classList.add('is-error');
+        setText(
+          $('result-email-text'),
+          link.emailError === 'rate_limited'
+            ? 'Link created, but the email limit was reached. Copy the link or try again later.'
+            : "Link created, but the email didn't send. Copy the link or use Email link to retry.",
+        );
+        emailNote.hidden = false;
+      } else {
+        emailNote.hidden = true;
+      }
+      $('hold-note').hidden = !payload.holdForApproval;
       showStep('result');
       $('copy-btn').focus();
       onCreated();
@@ -283,23 +327,73 @@ export function initCreateDialog(onCreated: () => void) {
     showStep('form');
     form.querySelector<HTMLInputElement>('input[name="amount"]')?.focus();
   });
-  dialog
-    .querySelectorAll('[data-close]')
-    .forEach((b) => b.addEventListener('click', () => dialog.close()));
+  wireDialog(dialog, () => $<HTMLButtonElement>('create-btn').disabled);
   dialog.addEventListener('close', reset);
 
-  // Click on the backdrop closes the dialog. The dialog has no padding, so a click whose target is
-  // the <dialog> itself landed outside the content. Require the press to start there too, so a
-  // text selection dragged out of a field doesn't close it, and stay open while a request runs.
-  let pressedOnBackdrop = false;
-  dialog.addEventListener('pointerdown', (e) => {
-    pressedOnBackdrop = e.target === dialog;
-  });
-  dialog.addEventListener('click', (e) => {
-    const busy = $<HTMLButtonElement>('create-btn').disabled;
-    if (e.target === dialog && pressedOnBackdrop && !busy) dialog.close();
-    pressedOnBackdrop = false;
+  return { open };
+}
+
+// ---------- email an existing link ----------
+
+export function initEmailDialog(onSent: () => void) {
+  const dialog = $<HTMLDialogElement>('email-dialog');
+  const form = $<HTMLFormElement>('email-form');
+  const to = form.elements.namedItem('to') as HTMLInputElement;
+  const error = $('email-error');
+  const btn = $<HTMLButtonElement>('email-send');
+  let current: LinkRow | null = null;
+
+  wireDialog(dialog, () => btn.disabled);
+  dialog.addEventListener('close', () => {
+    form.reset();
+    to.removeAttribute('aria-invalid');
+    setText(error, '');
+    current = null;
   });
 
-  return { open };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!current) return;
+    setText(error, '');
+    const value = to.value.trim();
+    if (!value || !to.validity.valid) {
+      to.setAttribute('aria-invalid', 'true');
+      setText(error, 'Enter a valid email address.');
+      return;
+    }
+    btn.disabled = true;
+    try {
+      await api(`/api/payment-links/${encodeURIComponent(current.id)}/email`, {
+        method: 'POST',
+        body: JSON.stringify({ to: value }),
+      });
+      dialog.close();
+      onSent();
+    } catch (err) {
+      if (handleAuthFailure(err)) {
+        dialog.close();
+        return;
+      }
+      const code = (err as { body?: { error?: string } }).body?.error;
+      setText(
+        error,
+        code === 'rate_limited'
+          ? 'Too many emails sent in the last hour. Try again later or copy the link.'
+          : code === 'link_inactive'
+            ? 'This link is no longer active.'
+            : "The email didn't send. Try again, or copy the link and send it yourself.",
+      );
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  return {
+    open(l: LinkRow) {
+      current = l;
+      $('email-amount').textContent = l.amountDisplay;
+      dialog.showModal();
+      to.focus();
+    },
+  };
 }

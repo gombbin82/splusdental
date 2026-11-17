@@ -1,6 +1,6 @@
 import type Stripe from 'stripe';
 import { vi } from 'vitest';
-import { createApp } from '../../src/app.js';
+import { createApp, type AppDeps } from '../../src/app.js';
 import type { TokenVerifier } from '../../src/auth.js';
 import type { Config } from '../../src/config.js';
 import type { StripeClient } from '../../src/payment-links.js';
@@ -12,6 +12,8 @@ export const TEST_CONFIG: Config = {
   googleClientId: 'test-client.apps.googleusercontent.com',
   publicSiteUrl: 'https://staging.splus.dental',
   stripeSecretKey: 'sk_test_dummy',
+  gmailSender: 'info@splus.dental',
+  runtimeSaEmail: '',
   port: 8080,
 };
 
@@ -60,14 +62,63 @@ export function fakeStripe() {
       retrieve: vi.fn(async () => fakeLink()),
       update: vi.fn(async () => fakeLink({ active: false })),
     },
+    paymentIntents: {
+      list: vi.fn(async () => ({
+        object: 'list',
+        data: [] as Stripe.PaymentIntent[],
+        has_more: false,
+      })),
+      retrieve: vi.fn(async () => fakePaymentIntent()),
+      capture: vi.fn(async () =>
+        fakePaymentIntent({ status: 'succeeded', amount_received: 35000 }),
+      ),
+      cancel: vi.fn(async () => fakePaymentIntent({ status: 'canceled' })),
+    },
   };
+}
+
+export function fakePaymentIntent(
+  overrides: Partial<Stripe.PaymentIntent> = {},
+): Stripe.PaymentIntent {
+  return {
+    id: 'pi_1',
+    object: 'payment_intent',
+    status: 'requires_capture',
+    amount: 35000,
+    amount_received: 0,
+    created: 1_700_000_000,
+    last_payment_error: null,
+    metadata: { source: 'splus-admin', patient_ref: 'K1042', invoice: '2026-1', hold: '1' },
+    latest_charge: {
+      id: 'ch_1',
+      object: 'charge',
+      billing_details: { name: 'Pat Payer', email: 'pat@example.com' },
+      payment_method_details: {
+        type: 'card',
+        card: { brand: 'visa', last4: '4242', capture_before: 1_700_600_000 },
+      },
+    },
+    ...overrides,
+  } as unknown as Stripe.PaymentIntent;
+}
+
+export function fakeEmail() {
+  return { send: vi.fn(async () => undefined) };
 }
 
 export function testApp(
   stripe: ReturnType<typeof fakeStripe> = fakeStripe(),
   config = TEST_CONFIG,
+  extra: Partial<Pick<AppDeps, 'email' | 'emailLimiter' | 'now'>> = {},
 ) {
-  return createApp({ config, verify: fakeVerifier, stripe: stripe as unknown as StripeClient });
+  return createApp({
+    config,
+    verify: fakeVerifier,
+    stripe: stripe as unknown as StripeClient,
+    email: null,
+    now: () => 1_700_000_000_000,
+    ...extra,
+  });
 }
 
 export const authHeaders = (extra: Record<string, string> = {}, token = STAFF_TOKEN) => ({

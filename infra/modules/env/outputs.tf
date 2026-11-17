@@ -3,6 +3,11 @@ output "runtime_sa_email" {
   value       = google_service_account.runtime.email
 }
 
+output "runtime_sa_unique_id" {
+  description = "Numeric client ID of the runtime SA: authorize it for gmail.send in Workspace domain-wide delegation."
+  value       = google_service_account.runtime.unique_id
+}
+
 output "service_name" {
   description = "Cloud Run service name (also used in firebase.json rewrites)."
   value       = local.name

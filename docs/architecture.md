@@ -61,6 +61,8 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 | 10 | Terraform state | GCS bucket `splusdental-tfstate` (versioned), prefixes `splus-web/<env>`; bootstrapped separately. |
 | 11 | CI/CD auth | Dedicated Workload Identity pool for this repo (restricted to `gombbin82/splusdental`); no service-account keys. Existing pools (`github`, `splus-pool`, `my-pool`) are left alone. |
 | 12 | Admin host | **Own hostname** `admin.splus.dental` (staging `admin-staging.splus.dental`), decided 2026-11-17: separate Firebase Hosting site per env (`splus-dental-admin`, `splus-dental-admin-staging`) built from `admin/`, same Cloud Run API via `/api/**` rewrite. Keeps the staff app on its own origin (strict CSP, always noindex) and lets its DNS go live independently of the apex/www cutover (#10). |
+| 13 | Emailing links | **Gmail API as the practice mailbox** (`GMAIL_SENDER`, e.g. info@), decided 2026-11-17. Keyless domain-wide delegation: the runtime SA signs its own JWT (`signJwt`), scope `gmail.send` only, authorized once by a Workspace super admin. Sent mail is in the mailbox's Sent folder; replies go to the front desk. Recipient addresses are never logged or stored. Generic content only (no PHI). |
+| 14 | Payment holds | **Stripe manual capture**, per-link checkbox (default on), decided 2026-11-17. The card is authorized at checkout and charged only when staff or an admin approves on the Payments page (full amount only), or released. Authorizations expire after ~7 days; the page shows the deadline. Releasing doesn't reopen a one-time link. |
 
 ## Prototype
 `prototype/` holds a first-pass static HTML/CSS redesign and admin UI mockup written before the stack was

@@ -42,6 +42,7 @@ module "env" {
   oauth_client_id     = var.oauth_client_id
   admin_emails        = var.admin_emails
   staff_emails        = var.staff_emails
+  gmail_sender        = var.gmail_sender
   deployer_sa_email   = "splus-web-deploy@${var.project_id}.iam.gserviceaccount.com"
   hosting_site_id     = var.hosting_site_id
   enable_service      = var.enable_service

@@ -12,6 +12,7 @@ locals {
     "cloudresourcemanager.googleapis.com",
     "firebase.googleapis.com",
     "firebasehosting.googleapis.com",
+    "gmail.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "run.googleapis.com",

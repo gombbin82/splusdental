@@ -57,3 +57,9 @@ variable "enable_admin_domain" {
   type        = bool
   default     = false
 }
+
+variable "gmail_sender" {
+  description = "Mailbox payment-link emails are sent as (e.g. the practice's info@ address). Empty disables email."
+  type        = string
+  default     = ""
+}

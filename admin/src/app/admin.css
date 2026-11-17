@@ -1095,3 +1095,224 @@ code {
     white-space: normal;
   }
 }
+
+/* ---------- payments, email, holds ---------- */
+
+.rail-badge {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+}
+
+.status.is-held {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.status.is-paid {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.status.is-released,
+.status.is-processing {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.status.is-failed {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab:hover {
+  color: var(--ink);
+}
+.tab[aria-selected='true'] {
+  color: var(--primary);
+}
+.tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--primary);
+}
+.tab .rail-badge {
+  margin-left: 0;
+}
+
+.deadline {
+  white-space: nowrap;
+}
+.deadline.is-soon {
+  color: var(--warn);
+  font-weight: 700;
+}
+.payer {
+  display: grid;
+  line-height: 1.3;
+}
+.payer small {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.btn-sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+.btn-danger-text {
+  color: var(--danger);
+}
+
+.confirm-amount {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 4px 0 8px;
+}
+.confirm-meta {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.dialog.dialog-sm {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.result-email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.result-email.is-ok {
+  color: var(--ok);
+}
+.result-email.is-error {
+  color: var(--danger);
+}
+
+.held-card {
+  border: 1px solid var(--warn-soft);
+}
+.held-card .action-icon {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+@media (max-width: 600px) {
+  .data-table td.payer-cell,
+  .data-table th.payer-cell {
+    white-space: normal;
+  }
+  .row-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.tabs .tabs-end {
+  margin-left: auto;
+  align-self: center;
+}
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #a51d1a;
+}
+
+/* Phones: each payment becomes a compact card instead of a wide table row. */
+@media (max-width: 600px) {
+  .stack-mobile thead {
+    display: none;
+  }
+  .stack-mobile tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .stack-mobile tbody td {
+    display: block;
+    height: auto;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: normal;
+  }
+  .stack-mobile td.payer-cell {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .stack-mobile td.num {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    font-size: 16px;
+  }
+  .stack-mobile td.col-date,
+  .stack-mobile td.col-ref,
+  .stack-mobile td.col-card,
+  .stack-mobile td.col-deadline {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .stack-mobile td.col-ref:not(:empty)::before {
+    content: 'Ref: ';
+  }
+  .stack-mobile td.col-deadline:not(:empty)::before {
+    content: 'Approve by ';
+  }
+  .stack-mobile td.col-status {
+    grid-column: 1 / -1;
+  }
+  .stack-mobile td.col-actions {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+  .stack-mobile td.col-actions .row-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .stack-mobile td.empty-row {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 24px 0 !important;
+  }
+}

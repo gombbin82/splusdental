@@ -18,3 +18,7 @@ enable_custom_domains = false
 # Squarespace DNS (only the new admin-staging host records; never touch MX / Workspace records).
 enable_admin_domain = false
 # admin_hosting_site_id = "splus-dental-admin-staging"
+
+# Email payment links from this Workspace mailbox (Gmail API via domain-wide delegation; see
+# infra/README.md "Email"). Leave empty to turn emailing off.
+gmail_sender = "info@example.com"

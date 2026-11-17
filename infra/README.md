@@ -30,7 +30,7 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | Hosting sites (admin) | `splus-dental-admin` (prod), `splus-dental-admin-staging` (staging) — targets `admin-prod` / `admin-staging` |
 | Admin domains | `admin.splus.dental` (prod), `admin-staging.splus.dental` (staging) |
 | Secrets | `splus-web-<env>-stripe-secret-key`, `splus-web-<env>-stripe-webhook-secret` |
-| Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
+| Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GMAIL_SENDER`, `RUNTIME_SA_EMAIL`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
 
 ### Who owns what on the Cloud Run service
 
@@ -158,6 +158,18 @@ terraform -chdir=infra/envs/staging apply
 
 Values never go through Terraform (they would land in state). Use Stripe **test** keys for staging.
 
+Use a Stripe **restricted key** (`rk_test_…` / `rk_live_…`, Developers → API keys → Create
+restricted key) with only what the API calls:
+
+| Stripe resource | Access | Used for |
+|---|---|---|
+| Payment Links | Write | create, list, deactivate, record "emailed" metadata |
+| Prices | Write | the per-link price (inline product) |
+| Products | Write | inline `product_data` (name + logo) |
+| PaymentIntents | Write | list payments, approve (capture) / release (cancel) held payments |
+| Charges | Read | payer name/email and card on the Payments page |
+| Everything else | None | |
+
 ```sh
 # paste the key, then Enter and Ctrl-D (keeps it out of shell history)
 gcloud secrets versions add splus-web-staging-stripe-secret-key --project=splusdental --data-file=-
@@ -168,6 +180,41 @@ gcloud secrets versions add splus-web-staging-stripe-webhook-secret --project=sp
 Cloud Run reads `latest` at instance start, so after rotating a key deploy a new revision (or wait for
 instances to recycle). `STRIPE_WEBHOOK_SECRET` is not wired into Cloud Run yet: add an `env` block in
 `modules/env/main.tf` once the webhook exists and the secret has a version.
+
+## Email (Gmail via domain-wide delegation)
+
+Staff can email a payment link to a patient. Mail goes out through the Gmail API **as `gmail_sender`**
+(e.g. the practice's `info@` mailbox) and lands in that mailbox's Sent folder. No key files: the Cloud
+Run runtime SA signs its own JWT with IAM Credentials `signJwt` (Terraform grants it
+`roles/iam.serviceAccountTokenCreator` on itself only), with `sub = gmail_sender` and scope
+`gmail.send`, and trades it for a Gmail token.
+
+One-time, per env (staging and prod have different runtime SAs):
+
+1. Set `gmail_sender = "info@…"` in `envs/<env>/terraform.tfvars` and `apply`. It must be a real,
+   licensed mailbox in the Workspace domain (not an alias or group).
+2. Get the SA's client ID: `terraform -chdir=infra/envs/<env> output -raw runtime_sa_unique_id`.
+3. A **Workspace super admin**: admin.google.com → Security → Access and data control → API controls →
+   **Manage Domain Wide Delegation** → Add new → Client ID = that number, OAuth scopes =
+   `https://www.googleapis.com/auth/gmail.send` (only this one) → Authorize.
+4. Test from the admin: Payment links → Email link. Staging emails have a `[TEST]` subject prefix.
+
+Security notes: delegation for `gmail.send` would let this SA send as *any* user in the domain; the API
+only ever uses `GMAIL_SENDER`, the SA has no key, and only Cloud Run (running as that SA) can sign for it.
+Recipient addresses are never logged or stored (Stripe metadata only gets `last_emailed_at` and
+`emailed_count`). Each staff member can send at most 20 emails per hour per instance. Leave
+`gmail_sender` empty to turn email off (the admin hides the controls).
+
+## Stripe Dashboard branding
+
+Checkout already shows the S+ logo next to the line item (`product_data.images`, from
+`<site>/logo.png`) and a "Questions about your balance? Call …" note under the Pay button. For the page
+chrome, set branding once per Stripe account (it applies to test and live mode):
+
+- Settings → Business → **Branding**: Icon and Logo → upload `site/public/logo.png`.
+- Brand color `#3458a6` (left panel background) and Accent color for buttons (e.g. `#3458a6`).
+- Public business name "S+ Dental", support phone and email (Settings → Business → Public details);
+  statement descriptor "S+ DENTAL".
 
 ## OAuth client (manual)
 

@@ -4,29 +4,73 @@ import { secureHeaders } from 'hono/secure-headers';
 import Stripe from 'stripe';
 import { requireAdmin, requireStaff, type StaffEnv, type TokenVerifier } from './auth.js';
 import { stripeMode, type Config } from './config.js';
+import { SendRateLimiter, emailTo, paymentLinkEmail, type EmailSender } from './email.js';
 import { log } from './log.js';
 import {
   LINK_ID,
   createInput,
   createPaymentLink,
   deactivatePaymentLink,
+  getOwnLink,
   listPaymentLinks,
   listQuery,
+  markEmailed,
   stripeErrorResponse,
   type StripeClient,
 } from './payment-links.js';
+import {
+  PAYMENT_ID,
+  capturePayment,
+  listPayments,
+  paymentsQuery,
+  releasePayment,
+} from './payments.js';
 
 export interface AppDeps {
   config: Config;
   verify: TokenVerifier;
   stripe: StripeClient;
+  /** Null when GMAIL_SENDER is unset: email features are off. */
+  email?: EmailSender | null;
+  emailLimiter?: SendRateLimiter;
+  now?: () => number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BODY_BYTES = 16 * 1024;
 
-export function createApp({ config, verify, stripe }: AppDeps) {
+export function createApp({
+  config,
+  verify,
+  stripe,
+  email = null,
+  emailLimiter = new SendRateLimiter(),
+  now = Date.now,
+}: AppDeps) {
   const app = new Hono<StaffEnv>().basePath('/api');
+
+  /** Send a payment-link email; returns an error code instead of throwing. Never logs `to`. */
+  const sendLinkEmail = async (
+    staffEmail: string,
+    to: string,
+    link: { url: string; amountDisplay: string },
+  ): Promise<'email_disabled' | 'rate_limited' | 'send_failed' | null> => {
+    if (!email) return 'email_disabled';
+    if (!emailLimiter.take(staffEmail)) return 'rate_limited';
+    try {
+      await email.send({ to, ...paymentLinkEmail({ ...link, env: config.appEnv }) });
+      return null;
+    } catch (err) {
+      const e = err as { step?: string; status?: number };
+      log('ERROR', 'email_failed', { staff: staffEmail, step: e.step, status: e.status });
+      return 'send_failed';
+    }
+  };
+
+  const idempotencyKeyOf = (header: string | undefined) => {
+    const key = header ?? '';
+    return UUID.test(key) ? key : null;
+  };
 
   // Request log: method, path (no query string), status, latency. Never headers or bodies.
   app.use(async (c, next) => {
@@ -74,6 +118,7 @@ export function createApp({ config, verify, stripe }: AppDeps) {
       googleClientId: config.googleClientId,
       stripeMode: stripeMode(config.stripeSecretKey),
       env: config.appEnv,
+      emailEnabled: email !== null,
     }),
   );
 
@@ -85,6 +130,8 @@ export function createApp({ config, verify, stripe }: AppDeps) {
   app.use('/me', staffOnly);
   app.use('/payment-links', staffOnly);
   app.use('/payment-links/*', staffOnly);
+  app.use('/payments', staffOnly);
+  app.use('/payments/*', staffOnly);
   app.use('/admin/*', staffOnly, requireAdmin);
 
   app.get('/me', (c) => c.json(c.get('staff')));
@@ -133,8 +180,46 @@ export function createApp({ config, verify, stripe }: AppDeps) {
       staff: staff.email,
       paymentLinkId: link.id,
       amountType: parsed.data.amountType,
+      hold: parsed.data.holdForApproval,
     });
-    return c.json(link, 201);
+    if (!parsed.data.emailTo) return c.json(link, 201);
+
+    const emailError = await sendLinkEmail(staff.email, parsed.data.emailTo, link);
+    if (emailError) return c.json({ ...link, emailed: false, emailError }, 201);
+    log('INFO', 'payment_link.emailed', { staff: staff.email, paymentLinkId: link.id });
+    try {
+      await markEmailed(stripe, await getOwnLink(stripe, link.id), Math.floor(now() / 1000));
+    } catch {
+      // Bookkeeping only; the email went out.
+    }
+    return c.json({ ...link, emailed: true }, 201);
+  });
+
+  app.post('/payment-links/:id/email', async (c) => {
+    if (!email) return c.json({ error: 'email_disabled' }, 503);
+    const id = c.req.param('id');
+    if (!LINK_ID.test(id)) return c.json({ error: 'invalid_request' }, 400);
+    let body: { to?: unknown };
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: 'invalid_request' }, 400);
+    }
+    const to = emailTo.safeParse(body?.to);
+    if (!to.success) return c.json({ error: 'invalid_request', fields: ['to'] }, 400);
+
+    const link = await getOwnLink(stripe, id);
+    if (!link.active) return c.json({ error: 'link_inactive' }, 409);
+    const staff = c.get('staff');
+    const err = await sendLinkEmail(staff.email, to.data, {
+      url: link.url,
+      amountDisplay: link.metadata?.amount_display ?? '',
+    });
+    if (err === 'rate_limited') return c.json({ error: 'rate_limited' }, 429);
+    if (err) return c.json({ error: 'email_failed' }, 502);
+    log('INFO', 'payment_link.emailed', { staff: staff.email, paymentLinkId: id });
+    await markEmailed(stripe, link, Math.floor(now() / 1000));
+    return c.json({ sent: true });
   });
 
   app.post('/payment-links/:id/deactivate', async (c) => {
@@ -144,6 +229,27 @@ export function createApp({ config, verify, stripe }: AppDeps) {
     log('INFO', 'payment_link.deactivated', { staff: c.get('staff').email, paymentLinkId: id });
     return c.json(result);
   });
+
+  app.get('/payments', async (c) => {
+    const q = paymentsQuery.safeParse(c.req.query());
+    if (!q.success) return c.json({ error: 'invalid_request' }, 400);
+    return c.json({ payments: await listPayments(stripe, q.data) });
+  });
+
+  for (const [action, fn, event] of [
+    ['capture', capturePayment, 'payment.captured'],
+    ['cancel', releasePayment, 'payment.released'],
+  ] as const) {
+    app.post(`/payments/:id/${action}`, async (c) => {
+      const id = c.req.param('id');
+      if (!PAYMENT_ID.test(id)) return c.json({ error: 'invalid_request' }, 400);
+      const key = idempotencyKeyOf(c.req.header('Idempotency-Key'));
+      if (!key) return c.json({ error: 'invalid_request', fields: ['Idempotency-Key'] }, 400);
+      const payment = await fn(stripe, id, key);
+      log('INFO', event, { staff: c.get('staff').email, paymentIntentId: id });
+      return c.json(payment);
+    });
+  }
 
   app.notFound((c) => c.json({ error: 'not_found' }, 404));
 

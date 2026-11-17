@@ -1,11 +1,13 @@
 import Stripe from 'stripe';
 import { z } from 'zod';
 import type { AppEnv } from './config.js';
+import { PRACTICE, emailTo } from './email.js';
 
 /** The subset of the Stripe SDK we use, so tests can inject a fake. */
 export type StripeClient = {
   prices: Pick<Stripe['prices'], 'create'>;
   paymentLinks: Pick<Stripe['paymentLinks'], 'create' | 'list' | 'retrieve' | 'update'>;
+  paymentIntents: Pick<Stripe['paymentIntents'], 'list' | 'retrieve' | 'capture' | 'cancel'>;
 };
 
 export const SOURCE = 'splus-admin';
@@ -39,6 +41,10 @@ export const createInput = z
     singleUse: z.boolean().default(true),
     collectPhone: z.boolean().default(false),
     askPatientName: z.boolean().default(false),
+    // Manual capture: the card is authorized at checkout and charged only after staff approve.
+    holdForApproval: z.boolean().default(false),
+    // Optional: email the new link to this address (never stored or logged).
+    emailTo: optional(emailTo),
   })
   .superRefine((v, ctx) => {
     if (v.amountType === 'fixed') {
@@ -87,6 +93,7 @@ export async function createPaymentLink(
 
   const metadata: Record<string, string> = {
     source: SOURCE,
+    ...(input.holdForApproval ? { hold: '1' } : {}),
     ...(input.patientRef ? { patient_ref: input.patientRef } : {}),
     ...(input.invoice ? { invoice: input.invoice } : {}),
     created_by: ctx.staffEmail,
@@ -110,7 +117,14 @@ export async function createPaymentLink(
     {
       currency: 'usd',
       ...amount,
-      product_data: { name: input.description, metadata },
+      product_data: {
+        name: input.description,
+        // Logo next to the line item on Checkout. Stripe needs a public https URL (not localhost).
+        ...(ctx.publicSiteUrl.startsWith('https://')
+          ? { images: [`${ctx.publicSiteUrl}/logo.png`] }
+          : {}),
+        metadata,
+      },
       metadata,
     },
     { idempotencyKey: `${ctx.idempotencyKey}:price` },
@@ -136,14 +150,25 @@ export async function createPaymentLink(
           ],
         }
       : {}),
+    custom_text: { submit: { message: checkoutMessage(input.holdForApproval) } },
     metadata,
-    payment_intent_data: { metadata },
+    payment_intent_data: input.holdForApproval
+      ? { capture_method: 'manual', metadata }
+      : { metadata },
   };
   const link = await stripe.paymentLinks.create(params, {
     idempotencyKey: `${ctx.idempotencyKey}:link`,
   });
 
   return { id: link.id, url: link.url, active: link.active, amountDisplay };
+}
+
+/** Shown under the Pay button on Stripe Checkout. Generic, no patient details. */
+export function checkoutMessage(hold: boolean) {
+  const base = `Questions about your balance? Call ${PRACTICE.name} at ${PRACTICE.phone}.`;
+  return hold
+    ? `${base} Your card will be authorized now and charged after our office confirms the amount.`
+    : base;
 }
 
 export async function listPaymentLinks(stripe: StripeClient, limit: number) {
@@ -168,6 +193,26 @@ export async function listPaymentLinks(stripe: StripeClient, limit: number) {
 }
 
 export class NotFoundError extends Error {}
+export class ConflictError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+  }
+}
+
+/** Retrieve a link we created (404 otherwise) — for actions on a single link. */
+export async function getOwnLink(stripe: StripeClient, id: string) {
+  const link = await stripe.paymentLinks.retrieve(id);
+  if (link.metadata?.source !== SOURCE) throw new NotFoundError();
+  return link;
+}
+
+/** Record that a link was emailed: time and count only, never the address. */
+export async function markEmailed(stripe: StripeClient, link: Stripe.PaymentLink, at: number) {
+  const count = Number(link.metadata?.emailed_count ?? '0') || 0;
+  await stripe.paymentLinks.update(link.id, {
+    metadata: { last_emailed_at: String(at), emailed_count: String(count + 1) },
+  });
+}
 
 export async function deactivatePaymentLink(stripe: StripeClient, id: string) {
   const link = await stripe.paymentLinks.retrieve(id);
@@ -177,8 +222,12 @@ export async function deactivatePaymentLink(stripe: StripeClient, id: string) {
 }
 
 /** Map an error from the Stripe SDK to a client-safe status + code. Never echoes Stripe's message. */
-export function stripeErrorResponse(err: unknown): { status: 400 | 404 | 502; error: string } {
+export function stripeErrorResponse(err: unknown): {
+  status: 400 | 404 | 409 | 502;
+  error: string;
+} {
   if (err instanceof NotFoundError) return { status: 404, error: 'not_found' };
+  if (err instanceof ConflictError) return { status: 409, error: err.code };
   if (err instanceof Stripe.errors.StripeInvalidRequestError) {
     return err.statusCode === 404
       ? { status: 404, error: 'not_found' }

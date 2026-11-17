@@ -5,7 +5,7 @@ import '@fontsource-variable/figtree';
 import '../app/admin.css';
 import Icon from '../components/Icon.astro';
 
-export type Page = 'home' | 'payment-links' | 'reports' | 'traffic' | 'settings';
+export type Page = 'home' | 'payment-links' | 'payments' | 'reports' | 'traffic' | 'settings';
 
 interface Props {
   title: string;
@@ -16,9 +16,10 @@ interface Props {
 
 const { title, current, adminOnly = false } = Astro.props;
 
-const main: { id: Page; href: string; label: string; icon: string }[] = [
+const main: { id: Page; href: string; label: string; icon: string; badge?: boolean }[] = [
   { id: 'home', href: '/', label: 'Home', icon: 'home' },
   { id: 'payment-links', href: '/payment-links', label: 'Payment links', icon: 'payments' },
+  { id: 'payments', href: '/payments', label: 'Payments', icon: 'credit_card', badge: true },
 ];
 const admin: { id: Page; href: string; label: string; icon: string }[] = [
   { id: 'reports', href: '/reports', label: 'Reports', icon: 'receipt_long' },
@@ -108,6 +109,7 @@ const admin: { id: Page; href: string; label: string; icon: string }[] = [
               >
                 <Icon name={it.icon} fill={it.id === current} />
                 <span>{it.label}</span>
+                {it.badge && <span class="rail-badge" data-held-badge hidden />}
               </a>
             ))
           }
@@ -148,6 +150,11 @@ const admin: { id: Page; href: string; label: string; icon: string }[] = [
       <button class="icon-btn" type="button" title="Copy link">
         <Icon name="content_copy" size={18} />
         <span class="visually-hidden" data-label>Copy link</span>
+      </button>
+    </template>
+    <template id="tpl-email">
+      <button class="icon-btn" type="button" title="Email link" aria-label="Email link">
+        <Icon name="forward_to_inbox" size={18} />
       </button>
     </template>
     <template id="tpl-deactivate">
