@@ -67,6 +67,15 @@ resource "google_project_iam_member" "deploy_hosting" {
   member  = google_service_account.deploy.member
 }
 
+# firebase-tools checks that firebasehosting.googleapis.com is enabled (serviceusage.services.get)
+# and bills API calls to the project (serviceusage.services.use). Both roles are read/use-only.
+resource "google_project_iam_member" "deploy_serviceusage" {
+  for_each = toset(["roles/serviceusage.serviceUsageViewer", "roles/serviceusage.serviceUsageConsumer"])
+  project  = var.project_id
+  role     = each.value
+  member   = google_service_account.deploy.member
+}
+
 # run.developer on each Cloud Run service and serviceAccountUser on each runtime SA are granted in
 # the env roots (infra/modules/env), scoped to that env's resources only.
 
