@@ -32,3 +32,13 @@ output "custom_domain_dns_updates" {
   description = "DNS records required by Firebase for custom domains."
   value       = module.env.custom_domain_dns_updates
 }
+
+output "admin_hosting_default_url" {
+  description = "Default URL of the staff admin app."
+  value       = module.env.admin_hosting_default_url
+}
+
+output "admin_domain_dns_updates" {
+  description = "DNS records required for the admin custom domain (null until enable_admin_domain = true)."
+  value       = module.env.admin_domain_dns_updates
+}

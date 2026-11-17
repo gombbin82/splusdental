@@ -3,16 +3,18 @@
 Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 
 ```
-                ┌───────────────────────────────┐
- patients ───▶  │  splus.dental / www (HTTPS)    │  static public site (Astro build)
- staff    ───▶  │  /admin  (static admin UI)     │
-                │  /api/** ──rewrite──┐          │
-                └─────────────────────┼──────────┘
-                                      ▼
-                           Cloud Run: splus-api (Node/TS)
-                            ├─ Google ID token verification (hd=splus.dental)
-                            ├─ Stripe API (Payment Links)
-                            └─ secrets from Secret Manager
+                ┌───────────────────────────────┐   ┌───────────────────────────────┐
+ patients ───▶  │  splus.dental / www (HTTPS)    │   │  admin.splus.dental (HTTPS)   │ ◀─── staff
+                │  site/ (Astro, static)         │   │  admin/ (Astro, static)       │
+                │  /admin → 301 admin host       │   │  noindex everywhere           │
+                │  /api/** ──rewrite──┐          │   │  /api/** ──rewrite──┐         │
+                └─────────────────────┼──────────┘   └─────────────────────┼─────────┘
+                                      └──────────────┬─────────────────────┘
+                                                     ▼
+                                  Cloud Run: splus-web-api-<env> (Node/TS, Hono)
+                                   ├─ Google ID token verification + admin/staff email allowlists
+                                   ├─ Stripe API (Payment Links)
+                                   └─ secrets from Secret Manager
 ```
 
 ## Components
@@ -24,9 +26,11 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 - **API** — `api/`, Node 22 + TypeScript (Express or Hono), container on Cloud Run, min instances 0.
   - `GET /api/config` — public client config (OAuth client ID, Stripe mode).
   - `GET/POST /api/payment-links`, `POST /api/payment-links/:id/deactivate` — admin only.
-- **Admin UI** — `/admin`, Google Identity Services sign-in button with `hd=splus.dental` hint; sends the ID
-  token as `Authorization: Bearer`. Server enforces `aud`, signature, `email_verified`, `hd`. Optional
-  allowlist/role list later.
+- **Admin UI** — `admin/`, its own Astro app served at the root of `admin.splus.dental` (staging:
+  `admin-staging.splus.dental`; before DNS: `splus-dental-admin[-staging].web.app`), a separate Firebase
+  Hosting site with the same `/api/**` rewrite. Google Identity Services sign-in; sends the ID token as
+  `Authorization: Bearer`. Server enforces `aud`, signature, `email_verified` and the admin/staff allowlists.
+  The public site's `/admin` 301s to the admin host.
 - **Payments** — Stripe Payment Links. Per link the server creates a Price (inline product) then a
   Payment Link:
   - fixed amount, or patient-entered amount (`custom_unit_amount` with optional preset/minimum)
@@ -56,6 +60,7 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 | 9 | Tooling | **pnpm** workspaces (via corepack), TypeScript strict, ESLint + Prettier, `terraform fmt`/`validate` + tflint; GitHub Actions CI on every PR. |
 | 10 | Terraform state | GCS bucket `splusdental-tfstate` (versioned), prefixes `splus-web/<env>`; bootstrapped separately. |
 | 11 | CI/CD auth | Dedicated Workload Identity pool for this repo (restricted to `gombbin82/splusdental`); no service-account keys. Existing pools (`github`, `splus-pool`, `my-pool`) are left alone. |
+| 12 | Admin host | **Own hostname** `admin.splus.dental` (staging `admin-staging.splus.dental`), decided 2026-11-17: separate Firebase Hosting site per env (`splus-dental-admin`, `splus-dental-admin-staging`) built from `admin/`, same Cloud Run API via `/api/**` rewrite. Keeps the staff app on its own origin (strict CSP, always noindex) and lets its DNS go live independently of the apex/www cutover (#10). |
 
 ## Prototype
 `prototype/` holds a first-pass static HTML/CSS redesign and admin UI mockup written before the stack was

@@ -5,8 +5,18 @@
   "targets": {
     "splusdental": {
       "hosting": {
-        "prod": ["splus-dental"],
-        "staging": ["splus-dental-staging"]
+        "prod": [
+          "splus-dental"
+        ],
+        "staging": [
+          "splus-dental-staging"
+        ],
+        "admin-prod": [
+          "splus-dental-admin"
+        ],
+        "admin-staging": [
+          "splus-dental-admin-staging"
+        ]
       }
     }
   }

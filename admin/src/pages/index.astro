@@ -1,7 +1,7 @@
 ---
 // Staff admin. Static page; all data comes from /api with a Google ID token (server-verified).
 // Self-contained on purpose: no shared layout/components from the public site.
-import '../../admin/admin.css';
+import '../app/admin.css';
 ---
 
 <html lang="en">
@@ -10,6 +10,8 @@ import '../../admin/admin.css';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Staff admin — S+ Dental</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -160,7 +162,7 @@ import '../../admin/admin.css';
     </main>
 
     <script>
-      import '../../admin/admin.ts';
+      import '../app/admin.ts';
     </script>
   </body>
 </html>

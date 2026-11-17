@@ -88,3 +88,19 @@ variable "custom_domains" {
   }))
   default = {}
 }
+
+variable "admin_hosting_site_id" {
+  description = "Firebase Hosting site ID for the staff admin app (globally unique; <id>.web.app)."
+  type        = string
+}
+
+variable "enable_admin_domain" {
+  description = "Attach admin_domain to the admin Hosting site. Only needs new DNS records for that host; independent of enable_custom_domains (apex/www, issue #10)."
+  type        = bool
+  default     = false
+}
+
+variable "admin_domain" {
+  description = "Custom hostname for the staff admin app, e.g. admin.splus.dental."
+  type        = string
+}
