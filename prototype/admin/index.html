@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Staff admin — S+ Dental</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/admin/admin.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark">S<sup>+</sup></span> S+ Dental <span class="tag">Staff</span></a>
+    <div id="who" class="who" hidden>
+      <span id="who-email"></span>
+      <button class="btn btn-ghost btn-sm" id="signout">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<!-- signed out -->
+<main id="signin-view" class="center-view">
+  <div class="panel narrow">
+    <h1 class="h-sm">Staff sign-in</h1>
+    <p class="muted">Sign in with your <strong>@splus.dental</strong> Google Workspace account.</p>
+    <div id="gsi-button"></div>
+    <p id="signin-error" class="error" hidden></p>
+  </div>
+</main>
+
+<!-- signed in -->
+<main id="app-view" class="wrap app" hidden>
+  <div id="mode-banner" class="banner" hidden></div>
+
+  <section class="panel">
+    <h2 class="h-sm">Create a payment link</h2>
+    <p class="muted small">Send the link to the patient by text or email. They pay on Stripe's secure page — no card details touch our systems.</p>
+
+    <form id="link-form" autocomplete="off">
+      <div class="seg" role="radiogroup" aria-label="Amount type">
+        <label><input type="radio" name="amountType" value="fixed" checked> Fixed amount</label>
+        <label><input type="radio" name="amountType" value="customer"> Patient enters amount</label>
+      </div>
+
+      <div class="grid">
+        <label class="field" data-show="fixed">
+          <span>Amount (USD)</span>
+          <div class="money"><i>$</i><input name="amount" type="number" min="1" step="0.01" placeholder="350.00"></div>
+        </label>
+        <label class="field" data-show="customer" hidden>
+          <span>Suggested amount (optional)</span>
+          <div class="money"><i>$</i><input name="preset" type="number" min="1" step="0.01" placeholder="200.00"></div>
+        </label>
+        <label class="field" data-show="customer" hidden>
+          <span>Minimum (optional)</span>
+          <div class="money"><i>$</i><input name="minimum" type="number" min="1" step="0.01" placeholder="1.00"></div>
+        </label>
+
+        <label class="field wide">
+          <span>Description the patient sees</span>
+          <input name="description" maxlength="120" value="S+ Dental — account balance">
+          <em class="hint">Keep it generic. Avoid procedure names or health details — Stripe isn't a HIPAA-covered system.</em>
+        </label>
+
+        <label class="field">
+          <span>Patient reference <small>(internal, optional)</small></span>
+          <input name="patientRef" maxlength="80" placeholder="e.g. chart # or initials">
+        </label>
+        <label class="field">
+          <span>Invoice / statement # <small>(optional)</small></span>
+          <input name="invoice" maxlength="60" placeholder="e.g. 2026-1142">
+        </label>
+      </div>
+
+      <div class="checks">
+        <label><input type="checkbox" name="singleUse" checked> One-time use (link closes after one payment)</label>
+        <label><input type="checkbox" name="collectPhone"> Ask for phone number</label>
+        <label><input type="checkbox" name="askPatientName" checked> Ask payer for patient's name</label>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="submit" id="create-btn">Create link</button>
+        <span id="form-error" class="error" hidden></span>
+      </div>
+    </form>
+
+    <div id="result" class="result" hidden>
+      <div>
+        <div class="small muted">Payment link ready</div>
+        <a id="result-url" target="_blank" rel="noopener"></a>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="copy-btn">Copy</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row-between">
+      <h2 class="h-sm">Recent links</h2>
+      <button class="btn btn-ghost btn-sm" id="refresh">Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table class="links">
+        <thead><tr><th>Created</th><th>Description</th><th>Amount</th><th>Reference</th><th>By</th><th>Status</th><th></th></tr></thead>
+        <tbody id="links-body"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="/admin/admin.js"></script>
+</body>
+</html>
