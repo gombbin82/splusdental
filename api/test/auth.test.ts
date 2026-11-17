@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import { createGoogleVerifier, requireAdmin, requireStaff, roleFor, type StaffEnv } from '../src/auth.js';
+import {
+  createGoogleVerifier,
+  requireAdmin,
+  requireStaff,
+  roleFor,
+  type StaffEnv,
+} from '../src/auth.js';
 import { CLIENT_ID, signIdToken, testOAuthClient } from './helpers/google-token.js';
 
 function appWithAuth() {
