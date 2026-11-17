@@ -5,6 +5,7 @@ import { PRACTICE, emailTo } from './email.js';
 
 /** The subset of the Stripe SDK we use, so tests can inject a fake. */
 export type StripeClient = {
+  products: Pick<Stripe['products'], 'create'>;
   prices: Pick<Stripe['prices'], 'create'>;
   paymentLinks: Pick<Stripe['paymentLinks'], 'create' | 'list' | 'retrieve' | 'update'>;
   paymentIntents: Pick<Stripe['paymentIntents'], 'list' | 'retrieve' | 'capture' | 'cancel'>;
@@ -113,20 +114,21 @@ export async function createPaymentLink(
           },
         };
 
-  const price = await stripe.prices.create(
+  // Product first: inline `product_data` on a Price doesn't accept `images`, and the logo next to
+  // the line item on Checkout needs one. Stripe needs a public https URL (skip on localhost).
+  const product = await stripe.products.create(
     {
-      currency: 'usd',
-      ...amount,
-      product_data: {
-        name: input.description,
-        // Logo next to the line item on Checkout. Stripe needs a public https URL (not localhost).
-        ...(ctx.publicSiteUrl.startsWith('https://')
-          ? { images: [`${ctx.publicSiteUrl}/logo.png`] }
-          : {}),
-        metadata,
-      },
+      name: input.description,
+      ...(ctx.publicSiteUrl.startsWith('https://')
+        ? { images: [`${ctx.publicSiteUrl}/logo.png`] }
+        : {}),
       metadata,
     },
+    { idempotencyKey: `${ctx.idempotencyKey}:product` },
+  );
+
+  const price = await stripe.prices.create(
+    { currency: 'usd', ...amount, product: product.id, metadata },
     { idempotencyKey: `${ctx.idempotencyKey}:price` },
   );
 
