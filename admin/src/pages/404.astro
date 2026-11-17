@@ -1,5 +1,6 @@
 ---
-// Admin host 404. Self-contained like the index page.
+// Admin host 404. Standalone (no sign-in needed to see it), same look as the app.
+import '@fontsource-variable/figtree';
 import '../app/admin.css';
 ---
 
@@ -8,14 +9,16 @@ import '../app/admin.css';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Not found — S+ Dental staff</title>
+    <title>Page not found – S+ Dental Admin</title>
     <link rel="icon" href="/favicon.png" type="image/png" />
   </head>
   <body>
-    <main class="center-view">
-      <div class="panel narrow">
-        <h1 class="h-sm">Page not found</h1>
-        <p class="muted"><a href="/">Back to the staff admin</a></p>
+    <main class="signin-view">
+      <div class="signin-card">
+        <img class="logo-img" src="/logo-96.png" width="56" height="56" alt="S+ Dental logo" />
+        <h1>Page not found</h1>
+        <p>That page doesn't exist in S+ Dental Admin.</p>
+        <a class="btn btn-filled" href="/">Go to Home</a>
       </div>
     </main>
   </body>

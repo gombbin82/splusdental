@@ -1,0 +1,80 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+---
+
+<AppShell title="Settings" current="settings" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Settings</h1>
+      <p class="page-sub">How this admin is set up. Read-only for now.</p>
+    </div>
+  </header>
+
+  <section class="card" aria-labelledby="env-heading">
+    <div class="card-head">
+      <h2 id="env-heading">Environment</h2>
+    </div>
+    <dl class="settings-list">
+      <div><dt>Environment</dt><dd id="s-env">…</dd></div>
+      <div><dt>Stripe</dt><dd id="s-stripe">…</dd></div>
+      <div><dt>Public website</dt><dd><a id="s-site" target="_blank" rel="noopener">…</a></dd></div>
+    </dl>
+  </section>
+
+  <section class="card" aria-labelledby="access-heading">
+    <div class="card-head">
+      <h2 id="access-heading">Access</h2>
+    </div>
+    <dl class="settings-list">
+      <div>
+        <dt>Admins</dt>
+        <dd><span id="s-admins">…</span><span class="dd-hint">Everything, including these settings</span></dd>
+      </div>
+      <div>
+        <dt>Staff</dt>
+        <dd><span id="s-staff">…</span><span class="dd-hint">Payment links</span></dd>
+      </div>
+    </dl>
+    <p class="card-foot">
+      People sign in with Google. Only the email addresses on these lists get in; they are set in the
+      site's Terraform configuration (<code>admin_emails</code>, <code>staff_emails</code>).
+    </p>
+  </section>
+  <p id="s-error" class="form-error" role="alert" hidden></p>
+</AppShell>
+
+<script>
+  import { $, api, handleAuthFailure, onReady, setText } from '../app/shell';
+
+  interface AdminSettings {
+    env: 'dev' | 'staging' | 'prod';
+    stripeMode: 'test' | 'live';
+    publicSiteUrl: string;
+    adminCount: number;
+    staffCount: number;
+  }
+
+  const ENV: Record<AdminSettings['env'], string> = {
+    prod: 'Production',
+    staging: 'Staging',
+    dev: 'Local development',
+  };
+  const people = (n: number) => `${n} ${n === 1 ? 'person' : 'people'}`;
+
+  onReady(async ({ me }) => {
+    if (me.role !== 'admin') return;
+    try {
+      const s = await api<AdminSettings>('/api/admin/settings');
+      $('s-env').textContent = ENV[s.env];
+      $('s-stripe').textContent =
+        s.stripeMode === 'live' ? 'Live: real payments' : 'Test mode: no real charges';
+      const a = $<HTMLAnchorElement>('s-site');
+      a.href = s.publicSiteUrl;
+      a.textContent = s.publicSiteUrl.replace(/^https?:\/\//, '');
+      $('s-admins').textContent = people(s.adminCount);
+      $('s-staff').textContent = people(s.staffCount);
+    } catch (err) {
+      if (!handleAuthFailure(err)) setText($('s-error'), "Couldn't load settings. Try refreshing.");
+    }
+  });
+</script>

@@ -1,0 +1,168 @@
+---
+// Staff admin app shell: top bar, nav rail, sign-in view. Every page renders inside this.
+// All data comes from /api with a Google ID token that the server verifies on each request.
+import '@fontsource-variable/figtree';
+import '../app/admin.css';
+import Icon from '../components/Icon.astro';
+
+export type Page = 'home' | 'payment-links' | 'reports' | 'traffic' | 'settings';
+
+interface Props {
+  title: string;
+  current: Page;
+  /** Staff who open this page see an "Admins only" message instead of the content. */
+  adminOnly?: boolean;
+}
+
+const { title, current, adminOnly = false } = Astro.props;
+
+const main: { id: Page; href: string; label: string; icon: string }[] = [
+  { id: 'home', href: '/', label: 'Home', icon: 'home' },
+  { id: 'payment-links', href: '/payment-links', label: 'Payment links', icon: 'payments' },
+];
+const admin: { id: Page; href: string; label: string; icon: string }[] = [
+  { id: 'reports', href: '/reports', label: 'Reports', icon: 'receipt_long' },
+  { id: 'traffic', href: '/traffic', label: 'Website traffic', icon: 'monitoring' },
+  { id: 'settings', href: '/settings', label: 'Settings', icon: 'settings' },
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>{title} – S+ Dental Admin</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script is:inline src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body data-admin-only={String(adminOnly)}>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div id="loading-view" class="loading-view" role="status" aria-label="Loading">
+      <img class="logo-img" src="/logo-96.png" width="48" height="48" alt="" />
+      <span class="spinner" aria-hidden="true"></span>
+    </div>
+
+    <main id="signin-view" class="signin-view" hidden>
+      <div class="signin-card">
+        <img class="logo-img" src="/logo-96.png" width="56" height="56" alt="S+ Dental logo" />
+        <h1>Sign in to S+ Dental Admin</h1>
+        <p>Use the Google account the practice added for you.</p>
+        <div id="gsi-button" class="gsi-slot"></div>
+        <p id="signin-error" class="signin-error" role="alert" hidden></p>
+      </div>
+      <p class="signin-foot">
+        <a href="https://splus.dental">splus.dental</a>
+      </p>
+    </main>
+
+    <div id="app-view" class="app" hidden>
+      <header class="topbar">
+        <button
+          id="menu-btn"
+          class="icon-btn menu-btn"
+          type="button"
+          aria-label="Main menu"
+          aria-controls="rail"
+          aria-expanded="false"
+        >
+          <Icon name="menu" size={24} />
+        </button>
+        <a class="brand" href="/">
+          <img class="logo-img" src="/logo-96.png" width="36" height="36" alt="" />
+          <span class="brand-name">S+ Dental <span class="brand-product">Admin</span></span>
+        </a>
+        <div class="topbar-end">
+          <span id="env-chip" class="chip chip-warn" hidden></span>
+          <span id="mode-chip" class="chip chip-info" hidden></span>
+          <button
+            id="avatar"
+            class="avatar"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="account-menu"></button>
+          <div id="account-menu" class="account-menu" role="region" aria-label="Account" hidden>
+            <span id="avatar-lg" class="avatar avatar-lg" aria-hidden="true"></span>
+            <div class="acct-name" id="acct-name"></div>
+            <div class="acct-email" id="acct-email"></div>
+            <span class="chip chip-role" id="acct-role"></span>
+            <button id="signout" class="btn btn-outline" type="button">
+              <Icon name="logout" size={18} /> Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="frame">
+        <nav id="rail" class="rail" aria-label="Main">
+          {
+            main.map((it) => (
+              <a
+                class="rail-item"
+                href={it.href}
+                aria-current={it.id === current ? 'page' : undefined}
+              >
+                <Icon name={it.icon} fill={it.id === current} />
+                <span>{it.label}</span>
+              </a>
+            ))
+          }
+          <div data-admin hidden>
+            <div class="rail-heading">Admin</div>
+            {
+              admin.map((it) => (
+                <a
+                  class="rail-item"
+                  href={it.href}
+                  aria-current={it.id === current ? 'page' : undefined}
+                >
+                  <Icon name={it.icon} fill={it.id === current} />
+                  <span>{it.label}</span>
+                </a>
+              ))
+            }
+          </div>
+        </nav>
+        <div id="scrim" class="scrim" aria-hidden="true"></div>
+
+        <main id="main" class="content" tabindex="-1">
+          <div id="page-content">
+            <slot />
+          </div>
+          <section id="admins-only" class="card empty-state" hidden>
+            <Icon name="lock" size={40} />
+            <h1>Admins only</h1>
+            <p>This page is available to practice admins. Ask an admin if you need access.</p>
+            <a class="btn btn-tonal" href="/">Go to Home</a>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- Row action buttons, cloned by the payment links table. -->
+    <template id="tpl-copy">
+      <button class="icon-btn" type="button" title="Copy link">
+        <Icon name="content_copy" size={18} />
+        <span class="visually-hidden" data-label>Copy link</span>
+      </button>
+    </template>
+    <template id="tpl-deactivate">
+      <button
+        class="icon-btn icon-btn-danger"
+        type="button"
+        title="Deactivate link"
+        aria-label="Deactivate link"
+      >
+        <Icon name="block" size={18} />
+      </button>
+    </template>
+
+    <script>
+      import '../app/shell';
+    </script>
+  </body>
+</html>

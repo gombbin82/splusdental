@@ -1,0 +1,25 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<AppShell title="Website traffic" current="traffic" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Website traffic</h1>
+      <p class="page-sub">How many people visit splus.dental, and how they find it.</p>
+    </div>
+  </header>
+
+  <section class="card empty-state">
+    <Icon name="monitoring" size={40} />
+    <h2>Traffic reports are on the way</h2>
+    <p>
+      Visits, top pages, and search terms will appear here after the new website goes live on
+      splus.dental.
+    </p>
+    <a class="btn btn-tonal" href="https://splus.dental" target="_blank" rel="noopener"
+      >Open the website</a
+    >
+  </section>
+</AppShell>
