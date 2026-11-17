@@ -1,10 +1,10 @@
 // Staff admin client. Vanilla TS, no framework.
 // Auth: Google Identity Services gives us an ID token; we send it as a Bearer token and the API
-// verifies it (signature, audience, email_verified, hd). Anything checked here is UX only.
+// verifies it (signature, audience, email_verified) and checks the email against the admin/staff
+// allowlists. Anything checked here is UX only.
 
 interface PublicConfig {
   googleClientId: string;
-  adminHd: string;
   stripeMode: 'test' | 'live';
   env: 'dev' | 'staging' | 'prod';
 }
@@ -29,7 +29,6 @@ interface Gsi {
       initialize(opts: {
         client_id: string;
         callback: (r: GsiCredentialResponse) => void;
-        hd?: string;
         auto_select?: boolean;
         cancel_on_tap_outside?: boolean;
         use_fedcm_for_prompt?: boolean;
@@ -127,7 +126,7 @@ function handleAuthFailure(err: unknown): boolean {
   storeToken(null);
   signinError(
     err.status === 403
-      ? 'That account is not allowed. Use your @splus.dental Google Workspace account.'
+      ? 'That account does not have access. Ask the practice admin to add your email.'
       : 'Your session expired. Please sign in again.',
   );
   show('signin');
@@ -150,8 +149,10 @@ async function onCredential(r: GsiCredentialResponse) {
 
 async function enterApp() {
   try {
-    const me = await api<{ email: string; name: string }>('/api/me');
+    const me = await api<{ email: string; name: string; role: 'admin' | 'staff' }>('/api/me');
     $('who-email').textContent = me.email;
+    setText($('who-role'), me.role === 'admin' ? 'Admin' : 'Staff');
+    document.body.dataset.role = me.role;
     signinError('');
     show('app');
     void loadLinks();
@@ -179,6 +180,8 @@ function signOut() {
   storeToken(null);
   window.google?.accounts.id.disableAutoSelect();
   $('who-email').textContent = '';
+  setText($('who-role'), '');
+  delete document.body.dataset.role;
   $('links-body').replaceChildren();
   $('result').hidden = true;
   signinError('');
@@ -459,7 +462,6 @@ async function boot() {
   gsi.accounts.id.initialize({
     client_id: config.googleClientId,
     callback: (r) => void onCredential(r),
-    hd: config.adminHd, // UX hint only; the server enforces the domain
     auto_select: true,
     cancel_on_tap_outside: false,
     use_fedcm_for_prompt: true,

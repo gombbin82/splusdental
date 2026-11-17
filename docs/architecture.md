@@ -50,8 +50,8 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 | 3 | Site framework | **Astro** (static output) in `site/`. |
 | 4 | API | **Node 22 + TypeScript + Hono** on Cloud Run in `api/`. |
 | 5 | Edge | **Firebase Hosting** (managed SSL apex + www, `/api/**` rewrite to Cloud Run). |
-| 6 | Admin access | Any **verified `@splus.dental`** account (server checks `email_verified` and `hd`); allowlist/roles later. |
-| 7 | OAuth consent screen | **External** — the project is not under a `splus.dental` Cloud org (owned by a personal account). Security is unchanged because the server enforces `hd == "splus.dental"`; the `hd` hint on the button is UX only. Revisit if the project moves into a Workspace org. |
+| 6 | Admin access | **Email allowlist with two roles** (updated 2026-11-17). Google sign-in; server verifies the token and `email_verified`, then looks the email up in `ADMIN_EMAILS` (role `admin`: everything incl. settings, reports, traffic) or `STAFF_EMAILS` (role `staff`: create/list/deactivate payment links). Anyone else → 403. Lists are Terraform variables in git-ignored `terraform.tfvars`, passed to Cloud Run as env vars; change = edit + `terraform apply` (~1 min). No database. Non-Workspace accounts (e.g. a maintainer's Gmail) can be listed. |
+| 7 | OAuth consent screen | **External** — the project is not under a `splus.dental` Cloud org (owned by a personal account). Fine because the server enforces the email allowlist (decision 6), and External also lets a listed non-Workspace account sign in. Revisit if the project moves into a Workspace org. |
 | 8 | Stripe account | Pending owner (issue #9). Test mode until go-live. |
 | 9 | Tooling | **pnpm** workspaces (via corepack), TypeScript strict, ESLint + Prettier, `terraform fmt`/`validate` + tflint; GitHub Actions CI on every PR. |
 | 10 | Terraform state | GCS bucket `splusdental-tfstate` (versioned), prefixes `splus-web/<env>`; bootstrapped separately. |

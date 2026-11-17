@@ -33,3 +33,15 @@ variable "enable_custom_domains" {
   type        = bool
   default     = false
 }
+
+variable "admin_emails" {
+  description = "Admin Google accounts (full access). Keep real values in terraform.tfvars (git-ignored)."
+  type        = list(string)
+  default     = []
+}
+
+variable "staff_emails" {
+  description = "Staff Google accounts (payment links). Keep real values in terraform.tfvars (git-ignored)."
+  type        = list(string)
+  default     = []
+}

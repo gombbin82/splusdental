@@ -3,7 +3,9 @@ export type StripeMode = 'test' | 'live';
 
 export interface Config {
   appEnv: AppEnv;
-  adminHd: string;
+  /** Lower-cased allowlists (ADMIN_EMAILS / STAFF_EMAILS, comma or whitespace separated). */
+  adminEmails: string[];
+  staffEmails: string[];
   googleClientId: string;
   publicSiteUrl: string;
   stripeSecretKey: string;
@@ -17,6 +19,18 @@ export function stripeMode(key: string | undefined): StripeMode {
   return /^(sk|rk)_live_/.test(key ?? '') ? 'live' : 'test';
 }
 
+/** Parse a comma/whitespace separated email list; lower-cased, de-duplicated. */
+export function parseEmailList(value: string | undefined): string[] {
+  return [
+    ...new Set(
+      (value ?? '')
+        .split(/[\s,]+/)
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
+}
+
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
   const appEnv = (env.APP_ENV || 'dev') as AppEnv;
   if (!APP_ENVS.includes(appEnv)) {
@@ -28,7 +42,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   }
   return {
     appEnv,
-    adminHd: env.ADMIN_HD || 'splus.dental',
+    adminEmails: parseEmailList(env.ADMIN_EMAILS),
+    staffEmails: parseEmailList(env.STAFF_EMAILS),
     googleClientId: env.GOOGLE_OAUTH_CLIENT_ID ?? '',
     publicSiteUrl: (env.PUBLIC_SITE_URL || 'http://localhost:4321').replace(/\/+$/, ''),
     stripeSecretKey,

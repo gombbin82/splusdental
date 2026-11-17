@@ -23,10 +23,16 @@ variable "public_site_url" {
   type        = string
 }
 
-variable "admin_hd" {
-  description = "Google Workspace domain allowed into /admin (ADMIN_HD)."
-  type        = string
-  default     = "splus.dental"
+variable "admin_emails" {
+  description = "Google account emails with the admin role (ADMIN_EMAILS). Full access incl. settings/reports."
+  type        = list(string)
+  default     = []
+}
+
+variable "staff_emails" {
+  description = "Google account emails with the staff role (STAFF_EMAILS). Payment links only."
+  type        = list(string)
+  default     = []
 }
 
 variable "oauth_client_id" {

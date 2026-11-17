@@ -88,8 +88,12 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.env
       }
       env {
-        name  = "ADMIN_HD"
-        value = var.admin_hd
+        name  = "ADMIN_EMAILS"
+        value = join(",", var.admin_emails)
+      }
+      env {
+        name  = "STAFF_EMAILS"
+        value = join(",", var.staff_emails)
       }
       env {
         name  = "GOOGLE_OAUTH_CLIENT_ID"

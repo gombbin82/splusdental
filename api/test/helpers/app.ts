@@ -7,7 +7,8 @@ import type { StripeClient } from '../../src/payment-links.js';
 
 export const TEST_CONFIG: Config = {
   appEnv: 'staging',
-  adminHd: 'splus.dental',
+  adminEmails: ['owner@splus.dental'],
+  staffEmails: ['frontdesk@splus.dental'],
   googleClientId: 'test-client.apps.googleusercontent.com',
   publicSiteUrl: 'https://staging.splus.dental',
   stripeSecretKey: 'sk_test_dummy',
@@ -15,20 +16,21 @@ export const TEST_CONFIG: Config = {
 };
 
 export const STAFF_TOKEN = 'good-token';
+export const ADMIN_TOKEN = 'admin-token';
 
 /** Token verification is covered with real signatures in auth.test.ts; here any non-good token is invalid. */
 export const fakeVerifier: TokenVerifier = async (token) => {
-  if (token !== STAFF_TOKEN) throw new Error('invalid');
+  if (token !== STAFF_TOKEN && token !== ADMIN_TOKEN) throw new Error('invalid');
+  const admin = token === ADMIN_TOKEN;
   return {
     iss: 'https://accounts.google.com',
     aud: TEST_CONFIG.googleClientId,
     sub: '1',
     iat: 0,
     exp: 0,
-    email: 'frontdesk@splus.dental',
+    email: admin ? 'owner@splus.dental' : 'frontdesk@splus.dental',
     email_verified: true,
-    hd: 'splus.dental',
-    name: 'Front Desk',
+    name: admin ? 'Owner' : 'Front Desk',
   };
 };
 
@@ -68,7 +70,7 @@ export function testApp(
   return createApp({ config, verify: fakeVerifier, stripe: stripe as unknown as StripeClient });
 }
 
-export const authHeaders = (extra: Record<string, string> = {}) => ({
-  Authorization: `Bearer ${STAFF_TOKEN}`,
+export const authHeaders = (extra: Record<string, string> = {}, token = STAFF_TOKEN) => ({
+  Authorization: `Bearer ${token}`,
   ...extra,
 });
