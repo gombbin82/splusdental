@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+oauth_client_id = "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+
+# hosting_site_id = "splus-dental"
+
+# Flip to true after: gcloud secrets versions add splus-web-prod-stripe-secret-key --data-file=-
+enable_service = false
+
+# Leave false until the DNS plan in issue #10 is agreed (apex carries Workspace MX records).
+enable_custom_domains = false
