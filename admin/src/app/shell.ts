@@ -92,8 +92,19 @@ function tokenExpiry(token: string): number {
   }
 }
 
+// Google ID tokens last about an hour. A few minutes before expiry, ask Google for a fresh one;
+// with auto_select it comes back silently for a returning user (no click), and the callback stores it.
+let refreshTimer = 0;
+function scheduleRefresh(token: string | null) {
+  clearTimeout(refreshTimer);
+  if (!token) return;
+  const ms = tokenExpiry(token) - Date.now() - 5 * 60_000;
+  if (ms > 0) refreshTimer = window.setTimeout(() => window.google?.accounts.id.prompt(), ms);
+}
+
 function storeToken(token: string | null) {
   idToken = token;
+  scheduleRefresh(token);
   try {
     if (token) sessionStorage.setItem(TOKEN_KEY, token);
     else sessionStorage.removeItem(TOKEN_KEY);
@@ -344,7 +355,7 @@ async function boot() {
 
   const saved = restoreToken();
   if (saved) {
-    idToken = saved;
+    storeToken(saved);
     await enterApp(config);
   }
 
@@ -379,6 +390,9 @@ async function boot() {
   if (!ctx) {
     storeToken(null);
     show('signin');
+    // Returning user with one Google session: signs in automatically, no click. Otherwise Google
+    // shows its account chooser (or nothing, e.g. after sign-out), and the button stays as fallback.
+    gsi.accounts.id.prompt();
   }
 }
 
