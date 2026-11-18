@@ -102,6 +102,37 @@ export const serviceGroups: ServiceGroup[] = [
 ];
 
 /** Primary navigation, in display order (mirrors the current site). */
+export interface InsurancePlan {
+  name: string;
+  /**
+   * Optional logo in site/public/insurance/ (e.g. '/insurance/aetna.svg'). Use only files the
+   * insurer provides to network dentists (provider portal / brand kit). Without one, the name is
+   * shown as text.
+   */
+  logo?: string;
+}
+
+/** Dental insurance networks the practice is in, confirmed by the practice 2026-11-18. */
+const plans: InsurancePlan[] = [
+  { name: 'Aetna' },
+  { name: 'Anthem' },
+  { name: 'Cigna' },
+  { name: 'Delta Dental' },
+  { name: 'Humana' },
+  { name: 'Premera' },
+  { name: 'Principal' },
+  { name: 'Regence' },
+  { name: 'TRICARE' },
+  { name: 'United Concordia' },
+  { name: 'UnitedHealthcare' },
+  { name: 'Unum' },
+];
+
+/** In-network plans, alphabetical (case-insensitive). */
+export const insurancePlans: readonly InsurancePlan[] = [...plans].sort((a, b) =>
+  a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }),
+);
+
 export const nav = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About us' },

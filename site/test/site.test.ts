@@ -5,6 +5,7 @@ import {
   breadcrumbJsonLd,
   dentistJsonLd,
   hours,
+  insurancePlans,
   nav,
   practice,
   serviceGroups,
@@ -165,5 +166,24 @@ describe('analytics consent', () => {
 
   it('links the consumer health data policy from every page footer', () => {
     expect(read('../src/components/Footer.astro')).toContain('href="/consumer-health-data"');
+  });
+});
+
+describe('insurance', () => {
+  it('lists the confirmed in-network plans alphabetically', () => {
+    expect(insurancePlans.map((p) => p.name)).toEqual([
+      'Aetna',
+      'Anthem',
+      'Cigna',
+      'Delta Dental',
+      'Humana',
+      'Premera',
+      'Principal',
+      'Regence',
+      'TRICARE',
+      'United Concordia',
+      'UnitedHealthcare',
+      'Unum',
+    ]);
   });
 });
