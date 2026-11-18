@@ -13,6 +13,8 @@ export interface Config {
   gmailSender: string;
   /** Runtime service account email; discovered from the metadata server when unset. */
   runtimeSaEmail: string;
+  /** Numeric GA4 property ID for the admin traffic page. '' = traffic reports off. */
+  ga4PropertyId: string;
   port: number;
 }
 
@@ -55,6 +57,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     stripeSecretKey,
     gmailSender: (env.GMAIL_SENDER ?? '').trim().toLowerCase(),
     runtimeSaEmail: (env.RUNTIME_SA_EMAIL ?? '').trim(),
+    ga4PropertyId: /^\d+$/.test((env.GA4_PROPERTY_ID ?? '').trim())
+      ? (env.GA4_PROPERTY_ID ?? '').trim()
+      : '',
     port: Number(env.PORT || 8080),
   };
 }

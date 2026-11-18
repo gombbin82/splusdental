@@ -104,6 +104,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build site
         run: pnpm --filter site build
+        env:
+          # GA4 measurement ID (public; it ships in the page). Loads only after visitor consent.
+          PUBLIC_GA_ID: G-XT2LGD6KEM
       - name: Build admin (always noindex)
         run: pnpm --filter admin build
       - name: Deploy hosting (site + admin)

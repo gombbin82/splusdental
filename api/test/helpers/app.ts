@@ -14,6 +14,7 @@ export const TEST_CONFIG: Config = {
   stripeSecretKey: 'sk_test_dummy',
   gmailSender: 'info@splus.dental',
   runtimeSaEmail: '',
+  ga4PropertyId: '',
   port: 8080,
 };
 
@@ -112,7 +113,7 @@ export function fakeEmail() {
 export function testApp(
   stripe: ReturnType<typeof fakeStripe> = fakeStripe(),
   config = TEST_CONFIG,
-  extra: Partial<Pick<AppDeps, 'email' | 'emailLimiter' | 'now'>> = {},
+  extra: Partial<Pick<AppDeps, 'email' | 'emailLimiter' | 'analytics' | 'now'>> = {},
 ) {
   return createApp({
     config,

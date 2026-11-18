@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   addressOneLine,
   breadcrumbJsonLd,
@@ -117,5 +118,52 @@ describe('robots.txt', () => {
     vi.stubEnv('PUBLIC_NOINDEX', 'true');
     const body = await robots();
     expect(body).toBe('User-agent: *\nDisallow: /\n');
+  });
+});
+
+describe('analytics flag', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  const load = async (value: string) => {
+    vi.resetModules();
+    vi.stubEnv('PUBLIC_GA_ID', value);
+    return (await import('../src/lib/env')).gaId;
+  };
+
+  it('is off unless a GA4 measurement ID is set (staging/dev builds)', async () => {
+    expect(await load('')).toBe('');
+  });
+
+  it('accepts a GA4 measurement ID and rejects anything else', async () => {
+    expect(await load('G-XT2LGD6KEM')).toBe('G-XT2LGD6KEM');
+    expect(await load('UA-12345-1')).toBe('');
+    expect(await load('G-XT2"><script>')).toBe('');
+  });
+});
+
+describe('analytics consent', () => {
+  const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8');
+
+  it('loads Google only after consent and honours Global Privacy Control', () => {
+    const src = read('../src/components/AnalyticsConsent.astro');
+    // The gtag script tag is created only inside load(); there is no static <script src=...gtag>.
+    expect(src).not.toMatch(/<script[^>]+googletagmanager/);
+    expect(src).toContain("if (choice === 'granted') load();");
+    expect(src).toContain('navigator.globalPrivacyControl');
+    expect(src).toContain('allow_google_signals: false');
+    expect(src).toContain('allow_ad_personalization_signals: false');
+  });
+
+  it('skips analytics on pages excluded from search (payment return, 404)', () => {
+    const layout = read('../src/layouts/BaseLayout.astro');
+    expect(layout).toContain("const analytics = gaId && !noindex ? gaId : '';");
+    expect(read('../src/pages/thank-you.astro')).toMatch(/<BaseLayout[^>]*\bnoindex\b/);
+  });
+
+  it('links the consumer health data policy from every page footer', () => {
+    expect(read('../src/components/Footer.astro')).toContain('href="/consumer-health-data"');
   });
 });

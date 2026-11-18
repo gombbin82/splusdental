@@ -7,19 +7,88 @@ import Icon from '../components/Icon.astro';
   <header class="page-head">
     <div>
       <h1>Website traffic</h1>
-      <p class="page-sub">How many people visit splus.dental, and how they find it.</p>
+      <p class="page-sub">
+        How many people visit splus.dental, and how they find it. Counts only visitors who allowed
+        analytics, so real traffic is higher.
+      </p>
+    </div>
+    <div class="range" role="group" aria-label="Date range" id="range" hidden>
+      <button type="button" class="range-btn" data-days="7" aria-pressed="false">7 days</button>
+      <button type="button" class="range-btn" data-days="28" aria-pressed="true">28 days</button>
+      <button type="button" class="range-btn" data-days="90" aria-pressed="false">90 days</button>
     </div>
   </header>
 
-  <section class="card empty-state">
+  <section class="card empty-state" id="t-setup" hidden>
     <Icon name="monitoring" size={40} />
-    <h2>Traffic reports are on the way</h2>
-    <p>
-      Visits, top pages, and search terms will appear here after the new website goes live on
-      splus.dental.
+    <h2 id="t-setup-title">Traffic reports aren't connected yet</h2>
+    <p id="t-setup-text">
+      Set <code>ga4_property_id</code> in this environment's Terraform configuration and give the
+      API's service account Viewer access in Google Analytics. See infra/README.md.
     </p>
-    <a class="btn btn-tonal" href="https://splus.dental" target="_blank" rel="noopener"
-      >Open the website</a
-    >
   </section>
+
+  <p id="t-error" class="form-error" role="alert" hidden></p>
+
+  <div id="t-report" hidden>
+    <p class="t-range" id="t-range"></p>
+
+    <div class="tiles" id="t-tiles"></div>
+
+    <section class="card chart-card" aria-labelledby="daily-heading">
+      <div class="card-head">
+        <h2 id="daily-heading">Visitors per day</h2>
+      </div>
+      <div class="chart" id="t-chart"></div>
+      <div class="chart-tip" id="t-tip" role="status" hidden></div>
+      <details class="chart-table">
+        <summary>Show as table</summary>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th class="num">Visitors</th><th class="num">Visits</th></tr></thead>
+            <tbody id="t-daily-body"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <div class="t-grid">
+      <section class="card table-card" aria-labelledby="pages-heading">
+        <div class="card-head"><h2 id="pages-heading">Top pages</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Page</th><th class="num">Views</th><th class="num">Visitors</th></tr>
+            </thead>
+            <tbody id="t-pages"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="t-col">
+        <section class="card" aria-labelledby="sources-heading">
+          <div class="card-head"><h2 id="sources-heading">How people find the site</h2></div>
+          <ul class="bars" id="t-sources"></ul>
+        </section>
+        <section class="card" aria-labelledby="devices-heading">
+          <div class="card-head"><h2 id="devices-heading">Devices</h2></div>
+          <ul class="bars" id="t-devices"></ul>
+        </section>
+      </div>
+    </div>
+
+    <p class="card-foot t-foot">
+      Source: Google Analytics. Days are complete days in the property's time zone; today isn't
+      included. Updated every 10 minutes.
+    </p>
+  </div>
 </AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initTrafficPage } from '../app/traffic';
+
+  onReady(({ me }) => {
+    if (me.role === 'admin') initTrafficPage();
+  });
+</script>

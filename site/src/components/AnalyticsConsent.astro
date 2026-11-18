@@ -1,0 +1,162 @@
+---
+// Opt-in analytics (Washington My Health My Data Act): nothing from Google loads until the visitor
+// clicks Accept. The choice is stored in localStorage; "Cookie settings" in the footer reopens this.
+// A Global Privacy Control signal counts as Decline and the banner is not shown.
+interface Props {
+  gaId: string;
+}
+const { gaId } = Astro.props;
+---
+
+<div id="consent" class="consent" role="region" aria-labelledby="consent-title" hidden>
+  <div class="wrap consent-inner">
+    <div>
+      <p id="consent-title" class="consent-title">Help us improve this website?</p>
+      <p class="consent-text">
+        With your OK, we use Google Analytics to count visits and see which pages are useful. It sets
+        cookies and shares your device and browsing details on this site with Google. We never use it
+        for ads, and we don't track the payment page. <a href="/privacy#analytics">Learn more</a>
+      </p>
+    </div>
+    <div class="consent-actions">
+      <button type="button" class="btn consent-btn" data-consent="denied">Decline</button>
+      <button type="button" class="btn consent-btn" data-consent="granted">Accept</button>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ gaId }}>
+  (() => {
+    const KEY = 'splus-analytics-consent';
+    const banner = document.getElementById('consent');
+    const get = () => {
+      try {
+        return localStorage.getItem(KEY);
+      } catch {
+        return null;
+      }
+    };
+    const set = (v) => {
+      try {
+        localStorage.setItem(KEY, v);
+      } catch {
+        // Private mode: the choice lasts for this page only.
+      }
+    };
+    const load = () => {
+      window['ga-disable-' + gaId] = false;
+      if (window.__splusGa) return;
+      window.__splusGa = true;
+      window.dataLayer = window.dataLayer || [];
+      // gtag.js expects the Arguments object itself, not an array.
+      window.gtag = function () {
+        // eslint-disable-next-line prefer-rest-params
+        window.dataLayer.push(arguments);
+      };
+      window.gtag('js', new Date());
+      window.gtag('config', gaId, {
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+      });
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId);
+      document.head.appendChild(s);
+    };
+    const stop = () => {
+      window['ga-disable-' + gaId] = true;
+      const host = location.hostname;
+      const base = host.split('.').slice(-2).join('.');
+      for (const c of document.cookie.split(';')) {
+        const name = c.split('=')[0].trim();
+        if (name !== '_ga' && !name.startsWith('_ga_')) continue;
+        for (const d of ['', '; domain=' + host, '; domain=.' + host, '; domain=.' + base]) {
+          document.cookie = name + '=; Max-Age=0; path=/' + d;
+        }
+      }
+    };
+    const choose = (v) => {
+      set(v);
+      banner.hidden = true;
+      if (v === 'granted') load();
+      else stop();
+    };
+
+    for (const b of banner.querySelectorAll('[data-consent]')) {
+      b.addEventListener('click', () => choose(b.getAttribute('data-consent')));
+    }
+    for (const b of document.querySelectorAll('[data-consent-open]')) {
+      b.hidden = false;
+      b.addEventListener('click', () => {
+        banner.hidden = false;
+        banner.querySelector('[data-consent="granted"]')?.focus();
+      });
+    }
+
+    const choice = get();
+    if (choice === 'granted') load();
+    else if (choice !== 'denied' && !navigator.globalPrivacyControl) banner.hidden = false;
+  })();
+</script>
+
+<style>
+  .consent {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 50;
+    background: var(--banner);
+    color: #f0f0f0;
+    border-top: 3px solid var(--blue);
+    padding: 16px 0;
+    font-size: var(--step--1);
+    box-shadow: 0 -4px 16px rgb(0 0 0 / 0.25);
+  }
+
+  .consent-inner {
+    display: grid;
+    gap: 14px;
+  }
+
+  @media (min-width: 860px) {
+    .consent-inner {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 32px;
+    }
+  }
+
+  .consent-title {
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .consent-text {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .consent a {
+    color: #fff;
+  }
+
+  .consent-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* Equal weight: neither choice is styled as the "default". */
+  .consent-btn {
+    flex: 1;
+    min-height: 42px;
+    padding: 8px 24px;
+    color: #fff;
+    border-color: #fff;
+    background: transparent;
+    font-size: var(--step--1);
+  }
+
+  .consent-btn:hover {
+    background: rgb(255 255 255 / 0.14);
+  }
+</style>

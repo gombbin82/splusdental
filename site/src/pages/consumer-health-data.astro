@@ -1,0 +1,106 @@
+---
+// Washington My Health My Data Act (RCW 19.373) consumer health data privacy policy. It must be
+// linked from the homepage (the footer link counts). Reviewed by the practice before publishing.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBanner from '../components/PageBanner.astro';
+import { practice } from '../data/practice';
+
+const updated = 'November 18, 2026';
+---
+
+<BaseLayout
+  title="Consumer Health Data Privacy Policy | S+ Dental"
+  fullTitle
+  breadcrumb="Consumer health data privacy"
+  description="How S+ Dental's website collects, uses, and shares consumer health data under Washington's My Health My Data Act, and how to exercise your rights."
+>
+  <PageBanner title="Consumer health data privacy" />
+
+  <section class="band legal-text">
+    <div class="narrow">
+      <p><em>Last updated {updated}</em></p>
+
+      <p>
+        Washington's My Health My Data Act gives you rights over "consumer health data," which can
+        include information that shows you may be looking for health care, such as visiting a
+        dentist's website. This policy explains what the {practice.name} website collects and how
+        you can control it. Your dental records and other information we keep as your health care
+        provider are protected by HIPAA and described in our Notice of Privacy Practices, available
+        at the office; this policy does not cover them.
+      </p>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li>
+          <strong>Website analytics, only if you click Accept:</strong> pages you view on this site
+          (for example, the services page), how you arrived, clicks on the appointment button, browser
+          and device type, and approximate (city-level) location derived from your IP address.
+        </li>
+        <li>
+          <strong>Payments you choose to make:</strong> when you pay through a payment link we send,
+          Stripe collects your card and contact details and gives us a record of the payment (amount,
+          date, name, and email).
+        </li>
+        <li>
+          <strong>Messages you send us</strong> by email or phone.
+        </li>
+      </ul>
+      <p>
+        We collect analytics directly from your browser through Google Analytics. Payment records
+        come from Stripe. Appointment requests are collected by Calendly on its own site, under its
+        own privacy policy.
+      </p>
+
+      <h2>Why we collect it</h2>
+      <ul>
+        <li>Analytics: to understand how many people use the website and which pages help them.</li>
+        <li>Payments and messages: to apply payments to your account and to reply to you.</li>
+      </ul>
+      <p>We do not use this information for advertising, and we do not sell it.</p>
+
+      <h2>Who we share it with</h2>
+      <p>
+        We share it only with service providers that process it for us: Google (Google Analytics
+        and website hosting) and Stripe (payments). We do not share it with any other third parties
+        or affiliates.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>You may:</p>
+      <ul>
+        <li>confirm whether we collect, share, or sell your consumer health data, and get a copy;</li>
+        <li>get a list of the third parties and affiliates we share it with;</li>
+        <li>withdraw consent at any time: use <strong>Cookie settings</strong> at the bottom of any page;</li>
+        <li>ask us to delete your consumer health data.</li>
+      </ul>
+      <p>
+        Analytics data is not linked to your name, so we usually cannot find a single person's
+        browsing history in it; clearing your cookies or withdrawing consent stops further
+        collection, and Google deletes analytics data after the retention period set in our account.
+      </p>
+      <p>
+        To make a request, email <a href={`mailto:${practice.email}`}>{practice.email}</a> or call{' '}
+        <a href={`tel:${practice.phone.tel}`}>{practice.phone.display}</a>. We will respond within
+        45 days. If we decline your request, you can appeal by replying to our decision with
+        "Appeal" in the subject; we will answer within 45 days, and if you are still not satisfied
+        you may contact the Washington State Attorney General at
+        <a href="https://www.atg.wa.gov/file-complaint" rel="noopener">atg.wa.gov/file-complaint</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal-text .narrow {
+    text-align: left;
+  }
+  .legal-text h2 {
+    margin-top: 1.6em;
+  }
+  .legal-text ul {
+    padding-left: 1.2em;
+  }
+  .legal-text li + li {
+    margin-top: 0.5em;
+  }
+</style>

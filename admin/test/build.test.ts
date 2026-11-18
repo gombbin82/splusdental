@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { inRange, toCents } from '../src/app/money';
 import { initials } from '../src/app/shell-utils';
 import { cardLabel, deadlineSoon } from '../src/app/payments-utils';
+import {
+  channelLabel,
+  compact,
+  delta,
+  duration,
+  axisScale,
+  share,
+  shortDate,
+} from '../src/app/traffic-utils';
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const robots = read('../public/robots.txt');
@@ -97,4 +106,36 @@ describe('deadlineSoon', () => {
   const now = 1_700_000_000_000;
   it('is true within 48h', () => expect(deadlineSoon(now / 1000 + 47 * 3600, now)).toBe(true));
   it('is false beyond 48h', () => expect(deadlineSoon(now / 1000 + 49 * 3600, now)).toBe(false));
+});
+
+describe('traffic helpers', () => {
+  it('compacts large numbers only', () => {
+    expect(compact(1284)).toBe('1,284');
+    expect(compact(12_900)).toBe('12.9K');
+    expect(compact(1_250_000)).toBe('1.3M');
+  });
+
+  it('describes change vs the previous period', () => {
+    expect(delta(150, 100)).toEqual({ text: '+50%', dir: 'up' });
+    expect(delta(80, 100)).toEqual({ text: '−20%', dir: 'down' });
+    expect(delta(100, 100)).toEqual({ text: 'No change', dir: 'flat' });
+    expect(delta(10, 0)).toBeNull();
+  });
+
+  it('formats durations, shares, dates and axis maxima', () => {
+    expect(duration(42)).toBe('42s');
+    expect(duration(95.5)).toBe('1m 36s');
+    expect(share(1, 3)).toBe(33);
+    expect(share(5, 0)).toBe(0);
+    expect(shortDate('2026-11-17')).toBe('Nov 17');
+    expect(axisScale(0)).toEqual({ max: 4, step: 1 });
+    expect(axisScale(29)).toEqual({ max: 30, step: 10 });
+    expect(axisScale(48)).toEqual({ max: 60, step: 20 });
+    expect(axisScale(120)).toEqual({ max: 150, step: 50 });
+  });
+
+  it('labels GA channels in plain words', () => {
+    expect(channelLabel('Organic Search')).toBe('Search (Google, Bing…)');
+    expect(channelLabel('Paid Search')).toBe('Paid Search');
+  });
 });

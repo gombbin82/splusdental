@@ -105,6 +105,17 @@ variable "admin_domain" {
   type        = string
 }
 
+variable "ga4_property_id" {
+  description = "Numeric GA4 property ID for the admin traffic page (GA4_PROPERTY_ID). Empty disables it. The runtime SA needs Viewer on the property, see infra/README.md."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = can(regex("^[0-9]*$", var.ga4_property_id))
+    error_message = "ga4_property_id is the numeric property ID (GA → Admin → Property details), not the G-… measurement ID."
+  }
+}
+
 variable "gmail_sender" {
   description = "Workspace mailbox payment-link emails are sent as (GMAIL_SENDER). Empty disables email. Needs domain-wide delegation, see infra/README.md."
   type        = string

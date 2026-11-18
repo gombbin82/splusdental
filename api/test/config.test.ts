@@ -32,8 +32,15 @@ describe('loadConfig', () => {
       stripeSecretKey: 'sk_test_x',
       gmailSender: '',
       runtimeSaEmail: '',
+      ga4PropertyId: '',
       port: 8080,
     });
+  });
+
+  it('accepts only a numeric GA4_PROPERTY_ID', () => {
+    expect(loadConfig({ GA4_PROPERTY_ID: ' 123456789 ' }).ga4PropertyId).toBe('123456789');
+    expect(loadConfig({ GA4_PROPERTY_ID: 'G-XT2LGD6KEM' }).ga4PropertyId).toBe('');
+    expect(loadConfig({ GA4_PROPERTY_ID: '123/../x' }).ga4PropertyId).toBe('');
   });
 
   it('reads GMAIL_SENDER (trimmed, lower-cased) and RUNTIME_SA_EMAIL', () => {

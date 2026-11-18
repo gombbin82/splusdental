@@ -22,3 +22,8 @@ enable_admin_domain = false
 # Email payment links from this Workspace mailbox (Gmail API via domain-wide delegation; see
 # infra/README.md "Email"). Leave empty to turn emailing off.
 gmail_sender = "info@example.com"
+
+# Admin "Website traffic" page: numeric GA4 property ID (GA → Admin → Property details), not the
+# G-… measurement ID. The runtime SA must be a Viewer on the property (infra/README.md "Website
+# analytics"). Leave empty to turn the page off. Staging can read the prod property.
+ga4_property_id = ""
