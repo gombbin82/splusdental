@@ -2,7 +2,8 @@
 import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HoursTable from '../components/HoursTable.astro';
-import { mapEmbedUrl, practice, websiteJsonLd } from '../data/practice';
+import { practice, websiteJsonLd } from '../data/practice';
+import MapEmbed from '../components/MapEmbed.astro';
 import operatory from '../assets/photos/office-operatory.jpg';
 import drKangAtWork from '../assets/photos/dr-kang-at-work.jpg';
 import patient from '../assets/photos/dental-patient.jpg';
@@ -92,14 +93,7 @@ const tiles = [
 
   <section class="band band-white" aria-labelledby="location-heading">
     <div class="wrap split visit">
-      <iframe
-        class="map"
-        title="Map showing S+ Dental at 21005 44th Ave W, Mountlake Terrace, WA"
-        src={mapEmbedUrl}
-        width="560"
-        height="420"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <MapEmbed class="map" />
       <div class="center location">
         <p class="new"><em>Brand-new dental office! We welcome new patients!</em></p>
         <h2 id="location-heading">Location and hours</h2>

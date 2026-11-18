@@ -62,7 +62,15 @@ export interface Traffic {
   devices: { device: string; users: number }[];
   /** Clicks on "Make an appointment" (GA4 outbound clicks to Calendly; needs enhanced measurement). */
   bookingClicks: number;
+  /**
+   * Visits from the Google Business Profile website link, which is tagged utm_campaign=gbp.
+   * Current and previous period.
+   */
+  gbp: { sessions: number; users: number; previousSessions: number };
 }
+
+/** utm_campaign on the Google Business Profile website link. */
+export const GBP_CAMPAIGN = 'gbp';
 
 const TOTAL_METRICS = [
   'activeUsers',
@@ -119,59 +127,69 @@ export async function getTraffic(
   const previous = { startDate: `${days * 2}daysAgo`, endDate: `${days + 1}daysAgo` };
   const byDesc = (metric: string) => [{ metric: { metricName: metric }, desc: true }];
 
-  const [totalsRes, dailyRes, pagesRes, sourcesRes, devicesRes, bookingRes] = await Promise.all([
-    client.runReport({
-      dateRanges: [current, previous],
-      metrics: TOTAL_METRICS.map((name) => ({ name })),
-    }),
-    client.runReport({
-      dateRanges: [current],
-      dimensions: [{ name: 'date' }],
-      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
-      limit: 400,
-    }),
-    client.runReport({
-      dateRanges: [current],
-      dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
-      metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
-      orderBys: byDesc('screenPageViews'),
-      limit: 10,
-    }),
-    client.runReport({
-      dateRanges: [current],
-      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-      metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
-      orderBys: byDesc('sessions'),
-      limit: 8,
-    }),
-    client.runReport({
-      dateRanges: [current],
-      dimensions: [{ name: 'deviceCategory' }],
-      metrics: [{ name: 'activeUsers' }],
-      orderBys: byDesc('activeUsers'),
-    }),
-    client.runReport({
-      dateRanges: [current],
-      metrics: [{ name: 'eventCount' }],
-      dimensionFilter: {
-        andGroup: {
-          expressions: [
-            { filter: { fieldName: 'eventName', stringFilter: { value: 'click' } } },
-            {
-              filter: {
-                fieldName: 'linkDomain',
-                stringFilter: { matchType: 'CONTAINS', value: 'calendly.com' },
+  const [totalsRes, dailyRes, pagesRes, sourcesRes, devicesRes, bookingRes, gbpRes] =
+    await Promise.all([
+      client.runReport({
+        dateRanges: [current, previous],
+        metrics: TOTAL_METRICS.map((name) => ({ name })),
+      }),
+      client.runReport({
+        dateRanges: [current],
+        dimensions: [{ name: 'date' }],
+        metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+        limit: 400,
+      }),
+      client.runReport({
+        dateRanges: [current],
+        dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+        metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
+        orderBys: byDesc('screenPageViews'),
+        limit: 10,
+      }),
+      client.runReport({
+        dateRanges: [current],
+        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+        metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+        orderBys: byDesc('sessions'),
+        limit: 8,
+      }),
+      client.runReport({
+        dateRanges: [current],
+        dimensions: [{ name: 'deviceCategory' }],
+        metrics: [{ name: 'activeUsers' }],
+        orderBys: byDesc('activeUsers'),
+      }),
+      client.runReport({
+        dateRanges: [current],
+        metrics: [{ name: 'eventCount' }],
+        dimensionFilter: {
+          andGroup: {
+            expressions: [
+              { filter: { fieldName: 'eventName', stringFilter: { value: 'click' } } },
+              {
+                filter: {
+                  fieldName: 'linkDomain',
+                  stringFilter: { matchType: 'CONTAINS', value: 'calendly.com' },
+                },
               },
-            },
-          ],
+            ],
+          },
         },
-      },
-    }),
-  ]);
+      }),
+      client.runReport({
+        dateRanges: [current, previous],
+        metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+        dimensionFilter: {
+          filter: { fieldName: 'sessionCampaignName', stringFilter: { value: GBP_CAMPAIGN } },
+        },
+      }),
+    ]);
 
   // With two date ranges GA adds a `dateRange` dimension: date_range_0 = current, _1 = previous.
-  const totalsRow = (name: string) =>
-    totalsRes.rows?.find((r) => r.dimensionValues?.[0]?.value === name)?.metricValues;
+  const rangeRow = (res: ReportResponse, name: string) =>
+    res.rows?.find((r) => r.dimensionValues?.[0]?.value === name)?.metricValues;
+  const totalsRow = (name: string) => rangeRow(totalsRes, name);
+  const gbpNow = rangeRow(gbpRes, 'date_range_0');
 
   const timeZone = dailyRes.metadata?.timeZone || totalsRes.metadata?.timeZone || 'UTC';
   const end = ymd(now - 86_400_000, timeZone);
@@ -207,6 +225,11 @@ export async function getTraffic(
       users: num(r.metricValues?.[0]?.value),
     })),
     bookingClicks: num(bookingRes.rows?.[0]?.metricValues?.[0]?.value),
+    gbp: {
+      sessions: num(gbpNow?.[0]?.value),
+      users: num(gbpNow?.[1]?.value),
+      previousSessions: num(rangeRow(gbpRes, 'date_range_1')?.[0]?.value),
+    },
   };
 }
 

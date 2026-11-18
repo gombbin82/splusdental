@@ -1,7 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageBanner from '../components/PageBanner.astro';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
 import { insurancePlans, practice } from '../data/practice';
+
+/** Intrinsic size of a logo in public/ (PNG header or SVG width/height/viewBox), for width/height attrs. */
+function logoSize(src: string): { width: number; height: number } | undefined {
+  // Resolve from the site package (cwd during build), not this module: pages are bundled elsewhere.
+  const file = path.join(process.cwd(), 'public', src);
+  const buf = readFileSync(file);
+  if (src.endsWith('.png')) return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+  const head = buf.toString('utf8', 0, 600);
+  const vb = head.match(/viewBox="[\d.\s-]*?([\d.]+)\s+([\d.]+)"/);
+  if (vb) return { width: Math.round(Number(vb[1])), height: Math.round(Number(vb[2])) };
+  return undefined;
+}
 ---
 
 <BaseLayout
@@ -71,7 +86,13 @@ import { insurancePlans, practice } from '../data/practice';
           insurancePlans.map((plan) => (
             <li class="plan">
               {plan.logo ? (
-                <img src={plan.logo} alt={plan.name} loading="lazy" decoding="async" />
+                <img
+                  src={plan.logo}
+                  alt={plan.name}
+                  {...logoSize(plan.logo)}
+                  loading="lazy"
+                  decoding="async"
+                />
               ) : (
                 <span>{plan.name}</span>
               )}
@@ -132,6 +153,8 @@ import { insurancePlans, practice } from '../data/practice';
 
   .plan img {
     display: block;
+    width: auto;
+    height: auto;
     max-width: 100%;
     max-height: 44px;
     object-fit: contain;

@@ -1,0 +1,110 @@
+---
+// Click-to-load Google Map. Nothing is requested from Google until the visitor clicks "Show map":
+// the embed sends the visitor's IP and page to Google with cookies (privacy: WA My Health My Data
+// Act), and its scripts slow the first paint on phones. The placeholder keeps the address and a
+// plain "Open in Google Maps" link, so the location is usable without the embed.
+import { mapEmbedUrl, practice } from '../data/practice';
+
+interface Props {
+  /** Sizing class from the page (aspect ratio, max height). */
+  class?: string;
+}
+const { class: className } = Astro.props;
+const title = `Map showing ${practice.name} at ${practice.address.street}, ${practice.address.city}, ${practice.address.region}`;
+---
+
+<div class:list={['map-embed', className]} data-map-src={mapEmbedUrl} data-map-title={title}>
+  <div class="map-placeholder">
+    <svg class="pin" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+      <path
+        fill="currentColor"
+        d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"
+      ></path>
+    </svg>
+    <p class="addr">
+      {practice.name}<br />
+      {`${practice.address.street} ${practice.address.suite}`}<br />
+      {`${practice.address.city}, ${practice.address.region} ${practice.address.postalCode}`}
+    </p>
+    <div class="map-actions">
+      <button type="button" class="btn btn-dark map-show">Show map</button>
+      <a class="btn btn-dark" href={practice.links.googleMaps} rel="noopener">Open in Google Maps</a>
+    </div>
+    <p class="note">Showing the map loads it from Google.</p>
+  </div>
+</div>
+
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>('.map-embed')) {
+    box.querySelector('.map-show')?.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.src = box.dataset.mapSrc ?? '';
+      frame.title = box.dataset.mapTitle ?? 'Map';
+      frame.referrerPolicy = 'no-referrer-when-downgrade';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+      frame.focus();
+    });
+  }
+</script>
+
+<style>
+  /* With aspect-ratio and height:auto, the box grows if the placeholder needs more room. */
+  .map-embed {
+    position: relative;
+    display: grid;
+    overflow: hidden;
+    background:
+      linear-gradient(rgb(255 255 255 / 0.55) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(90deg, rgb(255 255 255 / 0.55) 1px, transparent 1px) 0 0 / 32px 32px,
+      var(--taupe);
+  }
+
+  .map-embed :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .map-placeholder {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 12px;
+    padding: 16px;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .pin {
+    color: var(--blue);
+  }
+
+  .addr {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .map-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .map-actions .btn {
+    min-height: 42px;
+    padding: 8px 18px;
+    font-size: var(--step--1);
+    background: var(--white);
+  }
+
+  .note {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+</style>

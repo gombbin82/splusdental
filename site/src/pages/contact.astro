@@ -2,7 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageBanner from '../components/PageBanner.astro';
 import HoursTable from '../components/HoursTable.astro';
-import { mapEmbedUrl, practice } from '../data/practice';
+import { practice } from '../data/practice';
+import MapEmbed from '../components/MapEmbed.astro';
 ---
 
 <BaseLayout
@@ -36,14 +37,7 @@ import { mapEmbedUrl, practice } from '../data/practice';
   <section class="band band-taupe" aria-labelledby="map-heading">
     <div class="wrap">
       <h2 id="map-heading" class="center">Find us</h2>
-      <iframe
-        class="map"
-        title="Map showing S+ Dental at 21005 44th Ave W, Mountlake Terrace, WA"
-        src={mapEmbedUrl}
-        width="1150"
-        height="480"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <MapEmbed class="map" />
       <p class="center after-map">
         First visit? Read <a href="/new-patients">what to expect</a> or see{' '}
         <a href="/services">our services</a>.
