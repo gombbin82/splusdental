@@ -114,16 +114,10 @@ export async function createPaymentLink(
           },
         };
 
-  // Product first: inline `product_data` on a Price doesn't accept `images`, and the logo next to
-  // the line item on Checkout needs one. Stripe needs a public https URL (skip on localhost).
+  // No product image: the account icon (Stripe branding) already shows the logo at the top of
+  // Checkout, and a line-item image duplicated it as a large tile.
   const product = await stripe.products.create(
-    {
-      name: input.description,
-      ...(ctx.publicSiteUrl.startsWith('https://')
-        ? { images: [`${ctx.publicSiteUrl}/logo.png`] }
-        : {}),
-      metadata,
-    },
+    { name: input.description, metadata },
     { idempotencyKey: `${ctx.idempotencyKey}:product` },
   );
 
@@ -134,6 +128,10 @@ export async function createPaymentLink(
 
   const params: Stripe.PaymentLinkCreateParams = {
     line_items: [{ price: price.id, quantity: 1 }],
+    // Cards only (Apple Pay / Google Pay are card wallets and still appear). Keeps out methods that
+    // don't fit a dental balance: buy-now-pay-later (the practice doesn't offer financing), and bank
+    // debits / wallets that settle late or can't be held for approval.
+    payment_method_types: ['card'],
     after_completion: {
       type: 'redirect',
       redirect: { url: `${ctx.publicSiteUrl}/thank-you` },
