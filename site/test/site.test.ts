@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   addressOneLine,
   breadcrumbJsonLd,
   dentistJsonLd,
   hours,
+  insurancePlans,
   nav,
   practice,
   serviceGroups,
@@ -165,5 +166,33 @@ describe('analytics consent', () => {
 
   it('links the consumer health data policy from every page footer', () => {
     expect(read('../src/components/Footer.astro')).toContain('href="/consumer-health-data"');
+  });
+});
+
+describe('insurance', () => {
+  it('lists the confirmed in-network plans alphabetically', () => {
+    expect(insurancePlans.map((p) => p.name)).toEqual([
+      'Aetna',
+      'Anthem',
+      'Cigna',
+      'Delta Dental',
+      'Humana',
+      'Premera',
+      'Principal',
+      'Regence',
+      'TRICARE',
+      'United Concordia',
+      'UnitedHealthcare',
+      'Unum',
+    ]);
+  });
+});
+
+describe('insurance logos', () => {
+  it('points every logo at a file that exists in public/', () => {
+    for (const p of insurancePlans) {
+      if (!p.logo) continue;
+      expect(existsSync(new URL(`../public${p.logo}`, import.meta.url)), p.name).toBe(true);
+    }
   });
 });

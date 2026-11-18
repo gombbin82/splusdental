@@ -20,7 +20,7 @@ What the site already does, and what to do around launch (issue #10).
   `/admin` are always `noindex`.
 - 301 redirects in `firebase.json` from the old Google Sites paths (`/home`, `/about-us`,
   `/contact-us`, `/new-patients/your-first-visit`, `/new-patients/forms`,
-  `/new-patients/financing`) so existing links and rankings carry over.
+  `/new-patients/financing` → `#insurance`) so existing links and rankings carry over.
 - The name, address and phone (NAP) are the same everywhere, in the Google Business Profile format:
   **S+ Dental · 21005 44th Ave W Ste 103, Mountlake Terrace, WA 98043 · (425) 616-2331**.
 
@@ -44,5 +44,5 @@ What the site already does, and what to do around launch (issue #10).
       reviews, and never include health details in replies.
 - [ ] Keep the same NAP on Facebook, Yelp, insurance directories and other listings.
 - [ ] Check Search Console monthly for crawl errors and which searches bring visitors.
-- [ ] Fill the "coming soon" pages (Financing, Patient resources) when the content is ready; useful
+- [ ] Fill the "coming soon" pages (Patient resources; Financing is now Insurance) when the content is ready; useful
       content there (FAQs, aftercare) helps search.
