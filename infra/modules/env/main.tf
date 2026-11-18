@@ -108,6 +108,10 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.gmail_sender
       }
       env {
+        name  = "GA4_PROPERTY_ID"
+        value = var.ga4_property_id
+      }
+      env {
         name  = "RUNTIME_SA_EMAIL"
         value = google_service_account.runtime.email
       }

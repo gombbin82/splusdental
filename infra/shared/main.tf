@@ -7,6 +7,7 @@ data "google_project" "this" {
 
 locals {
   apis = toset([
+    "analyticsdata.googleapis.com",
     "artifactregistry.googleapis.com",
     "billingbudgets.googleapis.com",
     "cloudresourcemanager.googleapis.com",

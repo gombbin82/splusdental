@@ -43,6 +43,7 @@ module "env" {
   admin_emails        = var.admin_emails
   staff_emails        = var.staff_emails
   gmail_sender        = var.gmail_sender
+  ga4_property_id     = var.ga4_property_id
   deployer_sa_email   = "splus-web-deploy@${var.project_id}.iam.gserviceaccount.com"
   hosting_site_id     = var.hosting_site_id
   enable_service      = var.enable_service

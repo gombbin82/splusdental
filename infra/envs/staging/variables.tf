@@ -58,6 +58,12 @@ variable "enable_admin_domain" {
   default     = false
 }
 
+variable "ga4_property_id" {
+  description = "Numeric GA4 property ID for the admin traffic page. Empty disables it."
+  type        = string
+  default     = ""
+}
+
 variable "gmail_sender" {
   description = "Mailbox payment-link emails are sent as (e.g. the practice's info@ address). Empty disables email."
   type        = string

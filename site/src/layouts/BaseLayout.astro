@@ -6,8 +6,9 @@ import '@fontsource/merriweather/latin-700-italic.css';
 import fontUrl from '@fontsource/merriweather/files/merriweather-latin-400-normal.woff2?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import AnalyticsConsent from '../components/AnalyticsConsent.astro';
 import { SITE_URL, breadcrumbJsonLd, dentistJsonLd, practice } from '../data/practice';
-import { noindex as noindexBuild } from '../lib/env';
+import { gaId, noindex as noindexBuild } from '../lib/env';
 
 interface Props {
   /** Page title; " | S+ Dental" is appended unless `fullTitle` is set. */
@@ -39,6 +40,8 @@ const pageTitle = fullTitle ? title : `${title} | ${practice.name}`;
 const path = Astro.url.pathname.replace(/\/$/, '');
 const canonical = `${SITE_URL}${path || '/'}`;
 const robotsNoindex = noindexBuild || noindex;
+// No analytics on pages excluded from search (payment return, 404) or on non-prod builds.
+const analytics = gaId && !noindex ? gaId : '';
 const ogImage = `${SITE_URL}/og-image.png`;
 const structuredData = noindex
   ? []
@@ -99,5 +102,6 @@ const structuredData = noindex
       <slot />
     </main>
     <Footer />
+    {analytics && <AnalyticsConsent gaId={analytics} />}
   </body>
 </html>

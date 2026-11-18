@@ -1322,3 +1322,261 @@ code {
     padding: 24px 0 !important;
   }
 }
+
+/* ---------- traffic ---------- */
+
+.range {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+  align-self: center;
+}
+
+.range-btn {
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.range-btn + .range-btn {
+  border-left: 1px solid var(--line);
+}
+
+.range-btn:hover {
+  background: var(--surface-2);
+}
+
+.range-btn[aria-pressed='true'] {
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+}
+
+.t-range {
+  color: var(--ink-3);
+  margin: 0 0 12px;
+}
+
+[aria-busy='true'] {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tile {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-1);
+  padding: 16px 20px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.tile-label {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.tile-value {
+  font-size: 32px;
+  font-weight: 600;
+  font-feature-settings: 'tnum' 0;
+  line-height: 1.15;
+}
+
+.tile-delta {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.tile-delta.is-up {
+  color: var(--ok);
+}
+
+.tile-delta.is-down {
+  color: var(--danger);
+}
+
+.tile-arrow {
+  font-size: 10px;
+}
+
+.tile-vs {
+  color: var(--ink-3);
+}
+
+.chart-card {
+  position: relative;
+}
+
+.chart {
+  padding: 0 16px 8px;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-svg .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.chart-svg .axis {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.chart-svg .tick {
+  fill: var(--ink-3);
+  font-size: 12px;
+}
+
+.chart-svg .hit {
+  fill: transparent;
+}
+
+.chart-svg .bar-fill {
+  fill: var(--primary);
+}
+
+.chart-svg .bar.is-hover .bar-fill {
+  fill: #5b7cc4;
+}
+
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: 56px;
+  pointer-events: none;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: grid;
+  gap: 2px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-2);
+  z-index: 2;
+}
+
+.tip-value {
+  font-weight: 600;
+}
+
+.tip-label {
+  color: #c9d1de;
+  font-size: 12px;
+}
+
+.chart-table {
+  border-top: 1px solid var(--line);
+  padding: 12px 24px;
+}
+
+.chart-table summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.chart-table .table-wrap {
+  max-height: 320px;
+  overflow: auto;
+  margin-top: 8px;
+}
+
+.t-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 1000px) {
+  .t-grid {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}
+
+.t-grid .card {
+  margin: 0;
+}
+
+.t-col {
+  display: grid;
+  gap: 16px;
+}
+
+.page-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.page-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-path {
+  color: var(--ink-3);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 4px 24px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.bars-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.bars-value {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.bars-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.bars-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+.bars-empty {
+  color: var(--ink-3);
+}
+
+.t-foot {
+  margin-top: 16px;
+}

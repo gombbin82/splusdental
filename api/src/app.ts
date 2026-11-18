@@ -2,6 +2,13 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { secureHeaders } from 'hono/secure-headers';
 import Stripe from 'stripe';
+import {
+  AnalyticsError,
+  TrafficCache,
+  getTraffic,
+  trafficQuery,
+  type AnalyticsClient,
+} from './analytics.js';
 import { requireAdmin, requireStaff, type StaffEnv, type TokenVerifier } from './auth.js';
 import { stripeMode, type Config } from './config.js';
 import { SendRateLimiter, emailTo, paymentLinkEmail, type EmailSender } from './email.js';
@@ -33,6 +40,8 @@ export interface AppDeps {
   /** Null when GMAIL_SENDER is unset: email features are off. */
   email?: EmailSender | null;
   emailLimiter?: SendRateLimiter;
+  /** Null when GA4_PROPERTY_ID is unset: the traffic page shows setup instructions. */
+  analytics?: AnalyticsClient | null;
   now?: () => number;
 }
 
@@ -45,8 +54,10 @@ export function createApp({
   stripe,
   email = null,
   emailLimiter = new SendRateLimiter(),
+  analytics = null,
   now = Date.now,
 }: AppDeps) {
+  const trafficCache = new TrafficCache();
   const app = new Hono<StaffEnv>().basePath('/api');
 
   /** Send a payment-link email; returns an error code instead of throwing. Never logs `to`. */
@@ -146,6 +157,24 @@ export function createApp({
       staffCount: config.staffEmails.length,
     }),
   );
+
+  // Admin-only. Aggregate website traffic from GA4 (cached 10 minutes per range).
+  app.get('/admin/traffic', async (c) => {
+    if (!analytics) return c.json({ error: 'analytics_disabled' }, 503);
+    const q = trafficQuery.safeParse(c.req.query());
+    if (!q.success) return c.json({ error: 'invalid_request' }, 400);
+    try {
+      const t = now();
+      return c.json(
+        await trafficCache.get(q.data.days, t, () => getTraffic(analytics, q.data.days, t)),
+      );
+    } catch (err) {
+      const status = err instanceof AnalyticsError ? err.status : 0;
+      log('ERROR', 'analytics_failed', { status });
+      // 403: the runtime service account hasn't been added to the GA4 property yet.
+      return c.json({ error: status === 403 ? 'analytics_forbidden' : 'analytics_failed' }, 502);
+    }
+  });
 
   app.get('/payment-links', async (c) => {
     const q = listQuery.safeParse(c.req.query());

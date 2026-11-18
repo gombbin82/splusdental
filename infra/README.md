@@ -205,6 +205,29 @@ Recipient addresses are never logged or stored (Stripe metadata only gets `last_
 `emailed_count`). Each staff member can send at most 20 emails per hour per instance. Leave
 `gmail_sender` empty to turn email off (the admin hides the controls).
 
+## Website analytics (GA4)
+
+The public site loads Google Analytics 4 (`G-XT2LGD6KEM`) **only on prod builds** (`PUBLIC_GA_ID` in
+`.github/workflows/deploy.yml`) and **only after the visitor clicks Accept** on the consent banner
+(Washington My Health My Data Act). A Global Privacy Control signal counts as Decline. Google signals
+and ad personalization are off; `/thank-you` and the 404 page never load it.
+
+The admin **Website traffic** page (admin-only) reads the GA4 Data API as the Cloud Run runtime SA. No
+key file: Application Default Credentials with the `analytics.readonly` scope. One-time setup:
+
+1. `terraform -chdir=infra/shared apply` (enables `analyticsdata.googleapis.com`).
+2. GA → Admin → **Property details**: copy the numeric **Property ID** (not the `G-…` ID). Put it in
+   `ga4_property_id` in `envs/<env>/terraform.tfvars` and apply. Staging can point at the prod
+   property to show real data.
+3. GA → Admin → **Property access management** → Add users: the runtime SA email
+   (`terraform -chdir=infra/envs/<env> output -raw runtime_sa_email`, i.e.
+   `splus-web-api-<env>@splusdental.iam.gserviceaccount.com`), role **Viewer**, no email
+   notification.
+
+Recommended GA property settings: Admin → Data collection → Google signals **off**; Data retention
+**2 months**; Data streams → Enhanced measurement on (its outbound clicks power the "Appointment
+button clicks" tile). The page shows a setup message until steps 2–3 are done.
+
 ## Stripe Dashboard branding
 
 Checkout already shows the S+ logo next to the line item (`product_data.images`, from

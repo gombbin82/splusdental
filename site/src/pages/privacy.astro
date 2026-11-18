@@ -3,14 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageBanner from '../components/PageBanner.astro';
 import { practice } from '../data/practice';
 
-const updated = 'November 17, 2026';
+const updated = 'November 18, 2026';
 ---
 
 <BaseLayout
   title="Privacy Policy | S+ Dental, Mountlake Terrace"
   fullTitle
   breadcrumb="Privacy policy"
-  description="How the S+ Dental website and staff tools handle information: no tracking or ads, Google sign-in for staff only, and payments processed by Stripe."
+  description="How the S+ Dental website and staff tools handle information: optional Google Analytics only with your consent, no ads, Google sign-in for staff only, and payments processed by Stripe."
 >
   <PageBanner title="Privacy policy" />
 
@@ -26,9 +26,31 @@ const updated = 'November 17, 2026';
 
       <h2>Visiting our website</h2>
       <p>
-        We do not use advertising, analytics, or tracking cookies, and we do not sell or share personal
-        information. Our hosting provider (Google Firebase) keeps standard technical logs, such as IP
-        address and pages requested, to operate and secure the site.
+        We do not use advertising or ad-tracking cookies, and we do not sell personal information. Our
+        hosting provider (Google Firebase) keeps standard technical logs, such as IP address and pages
+        requested, to operate and secure the site.
+      </p>
+
+      <h2 id="analytics">Website analytics (only if you agree)</h2>
+      <p>
+        When you first visit, we ask whether we may use Google Analytics. If you click Decline, or
+        your browser sends a Global Privacy Control signal, Google Analytics does not load and nothing
+        is sent to Google for analytics.
+      </p>
+      <p>
+        If you click Accept, Google Analytics sets cookies and collects which pages of this site you
+        view, how you arrived (for example, a search engine or a link), when you click the
+        appointment button, your browser and device type, and your approximate location (city level,
+        derived by Google from your IP address). Google processes this on our behalf. We see only
+        totals, such as how many people visited a page; we cannot see who you are. Advertising
+        features and ad personalization are turned off. We do not run analytics on the page you
+        return to after paying, and appointment booking happens on Calendly's site, outside our
+        analytics.
+      </p>
+      <p>
+        You can change your choice at any time with <strong>Cookie settings</strong> at the bottom
+        of every page. Washington residents: see our{' '}
+        <a href="/consumer-health-data">Consumer Health Data Privacy Policy</a>.
       </p>
       <p>
         Some pages include or link to services run by other companies, which have their own privacy
