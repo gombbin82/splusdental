@@ -230,12 +230,13 @@ button clicks" tile). The page shows a setup message until steps 2–3 are done.
 
 ## Stripe Dashboard branding
 
-Checkout already shows the S+ logo next to the line item (`product_data.images`, from
-`<site>/logo.png`) and a "Questions about your balance? Call …" note under the Pay button. For the page
-chrome, set branding once per Stripe account (it applies to test and live mode):
+Payment links accept **cards only** (`payment_method_types: ['card']`; Apple Pay and Google Pay still
+appear) and carry no product image. Checkout shows a "Questions about your balance? Call …" note under
+the Pay button. Set the page look once per Stripe account (applies to test and live mode):
 
-- Settings → Business → **Branding**: Icon and Logo → upload `site/public/logo.png`.
-- Brand color `#3458a6` (left panel background) and Accent color for buttons (e.g. `#3458a6`).
+- Settings → Business → **Branding**: Icon → upload `site/public/logo.png`.
+- Background color white (`#ffffff`) and button/accent color `#3458a6` (logo blue). A white
+  background keeps the page light; a blue background makes the whole left panel blue.
 - Public business name "S+ Dental", support phone and email (Settings → Business → Public details);
   statement descriptor "SPLUS DENTAL" (banks drop the "+", so "S+ DENTAL" showed as "S DENTAL").
 

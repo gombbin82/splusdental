@@ -1,14 +1,7 @@
 import Stripe from 'stripe';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLogSink, type LogSink } from '../src/log.js';
-import {
-  TEST_CONFIG,
-  authHeaders,
-  fakeEmail,
-  fakeLink,
-  fakeStripe,
-  testApp,
-} from './helpers/app.js';
+import { authHeaders, fakeEmail, fakeLink, fakeStripe, testApp } from './helpers/app.js';
 import { SendRateLimiter } from '../src/email.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,12 +64,10 @@ describe('POST /api/payment-links', () => {
     expect(stripe.products.create).toHaveBeenCalledWith(
       {
         name: 'S+ Dental — account balance',
-        images: ['https://staging.splus.dental/logo.png'],
         metadata,
       },
       { idempotencyKey: `${IDEM}:product` },
     );
-    // Prices can't carry product images inline (Stripe: parameter_unknown), so link by id only.
     expect(stripe.prices.create).toHaveBeenCalledWith(
       { currency: 'usd', unit_amount: 35000, product: 'prod_1', metadata },
       { idempotencyKey: `${IDEM}:price` },
@@ -85,6 +76,7 @@ describe('POST /api/payment-links', () => {
     expect(stripe.paymentLinks.create).toHaveBeenCalledWith(
       {
         line_items: [{ price: 'price_1', quantity: 1 }],
+        payment_method_types: ['card'],
         after_completion: {
           type: 'redirect',
           redirect: { url: 'https://staging.splus.dental/thank-you' },
@@ -361,17 +353,10 @@ describe('holds and Checkout branding', () => {
     expect(params.metadata.hold).toBeUndefined();
   });
 
-  it('skips the product image for a non-https (local dev) site URL', async () => {
+  it('never attaches a product image (the account icon already shows the logo)', async () => {
     const stripe = fakeStripe();
-    await testApp(stripe, { ...TEST_CONFIG, publicSiteUrl: 'http://localhost:4321' }).request(
-      '/api/payment-links',
-      {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json', 'Idempotency-Key': IDEM }),
-        body: JSON.stringify({ amountType: 'fixed', amountCents: 5000 }),
-      },
-    );
-    expect(firstArg(stripe.products.create).images).toBeUndefined();
+    await post(stripe, { amountType: 'fixed', amountCents: 5000 });
+    expect(firstArg(stripe.products.create)).not.toHaveProperty('images');
   });
 });
 
