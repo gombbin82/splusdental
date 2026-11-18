@@ -114,18 +114,18 @@ export interface InsurancePlan {
 
 /**
  * Dental insurance networks the practice is in, confirmed by the practice 2026-11-18.
- * Logos: Wikimedia Commons (public-domain marks), 2026-11-18. Cigna, Premera and Regence show as
- * text until the office gets current files from those insurers' provider portals.
+ * Logos: Anthem, Cigna, Premera, Regence and TRICARE files from the practice (2026-11-18); the rest
+ * from Wikimedia Commons (public-domain marks). Replace any of them with provider-portal files.
  */
 const plans: InsurancePlan[] = [
   { name: 'Aetna', logo: '/insurance/aetna.svg' },
   { name: 'Anthem', logo: '/insurance/anthem.svg' },
-  { name: 'Cigna' },
+  { name: 'Cigna', logo: '/insurance/cigna.png' },
   { name: 'Delta Dental', logo: '/insurance/delta-dental.svg' },
   { name: 'Humana', logo: '/insurance/humana.svg' },
-  { name: 'Premera' },
+  { name: 'Premera', logo: '/insurance/premera.png' },
   { name: 'Principal', logo: '/insurance/principal.svg' },
-  { name: 'Regence' },
+  { name: 'Regence', logo: '/insurance/regence.png' },
   { name: 'TRICARE', logo: '/insurance/tricare.svg' },
   { name: 'United Concordia', logo: '/insurance/united-concordia.png' },
   { name: 'UnitedHealthcare', logo: '/insurance/unitedhealthcare.svg' },
