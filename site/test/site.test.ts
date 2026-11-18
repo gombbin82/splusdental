@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   addressOneLine,
   breadcrumbJsonLd,
@@ -185,5 +185,14 @@ describe('insurance', () => {
       'UnitedHealthcare',
       'Unum',
     ]);
+  });
+});
+
+describe('insurance logos', () => {
+  it('points every logo at a file that exists in public/', () => {
+    for (const p of insurancePlans) {
+      if (!p.logo) continue;
+      expect(existsSync(new URL(`../public${p.logo}`, import.meta.url)), p.name).toBe(true);
+    }
   });
 });
