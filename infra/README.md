@@ -237,7 +237,7 @@ chrome, set branding once per Stripe account (it applies to test and live mode):
 - Settings → Business → **Branding**: Icon and Logo → upload `site/public/logo.png`.
 - Brand color `#3458a6` (left panel background) and Accent color for buttons (e.g. `#3458a6`).
 - Public business name "S+ Dental", support phone and email (Settings → Business → Public details);
-  statement descriptor "S+ DENTAL".
+  statement descriptor "SPLUS DENTAL" (banks drop the "+", so "S+ DENTAL" showed as "S DENTAL").
 
 ## OAuth client (manual)
 
