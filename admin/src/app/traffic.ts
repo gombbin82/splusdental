@@ -33,6 +33,7 @@ interface Traffic {
   sources: { channel: string; sessions: number; users: number }[];
   devices: { device: string; users: number }[];
   bookingClicks: number;
+  gbp: { sessions: number; users: number; previousSessions: number };
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -79,6 +80,13 @@ function renderTiles(t: Traffic) {
       undefined,
       undefined,
       'Clicks through to online booking',
+    ),
+    tile(
+      'From Google Business Profile',
+      compact(t.gbp.sessions),
+      t.gbp.sessions,
+      t.gbp.previousSessions,
+      'Visits via the website link on Google',
     ),
     tile(
       'Average visit',

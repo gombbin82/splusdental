@@ -25,6 +25,9 @@ function fakeGa(): AnalyticsClient & { runReport: ReturnType<typeof vi.fn> } {
   const runReport = vi.fn(async (req: ReportRequest): Promise<ReportResponse> => {
     const dims = (req.dimensions ?? []).map((d) => d.name).join(',');
     const metadata = { timeZone: 'America/Los_Angeles' };
+    if (req.dateRanges.length === 2 && req.dimensionFilter) {
+      return { rows: [row(['date_range_0'], [14, 11]), row(['date_range_1'], [9, 8])] };
+    }
     if (req.dateRanges.length === 2) {
       return {
         metadata,
@@ -64,11 +67,11 @@ describe('date helpers', () => {
 });
 
 describe('getTraffic', () => {
-  it('maps the six reports and fills missing days with zeros', async () => {
+  it('maps the seven reports and fills missing days with zeros', async () => {
     const ga = fakeGa();
     const t = await getTraffic(ga, 7, NOW);
 
-    expect(ga.runReport).toHaveBeenCalledTimes(6);
+    expect(ga.runReport).toHaveBeenCalledTimes(7);
     expect(ga.runReport.mock.calls[0]![0].dateRanges).toEqual([
       { startDate: '7daysAgo', endDate: 'yesterday' },
       { startDate: '14daysAgo', endDate: '8daysAgo' },
@@ -100,6 +103,13 @@ describe('getTraffic', () => {
     expect(t.sources.map((s) => s.channel)).toEqual(['Organic Search', 'Direct']);
     expect(t.devices[0]).toEqual({ device: 'mobile', users: 80 });
     expect(t.bookingClicks).toBe(17);
+    expect(t.gbp).toEqual({ sessions: 14, users: 11, previousSessions: 9 });
+    const gbpReq = ga.runReport.mock.calls.find(([r]) =>
+      JSON.stringify(r.dimensionFilter ?? '').includes('sessionCampaignName'),
+    )?.[0];
+    expect(gbpReq?.dimensionFilter).toEqual({
+      filter: { fieldName: 'sessionCampaignName', stringFilter: { value: 'gbp' } },
+    });
   });
 
   it('copes with an empty property (no rows at all)', async () => {
@@ -109,6 +119,7 @@ describe('getTraffic', () => {
     expect(t.timeZone).toBe('UTC');
     expect(t.pages).toEqual([]);
     expect(t.bookingClicks).toBe(0);
+    expect(t.gbp).toEqual({ sessions: 0, users: 0, previousSessions: 0 });
   });
 });
 
