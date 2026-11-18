@@ -207,7 +207,7 @@ Recipient addresses are never logged or stored (Stripe metadata only gets `last_
 
 ## Website analytics (GA4)
 
-The public site loads Google Analytics 4 (`G-XT2LGD6KEM`) **only on prod builds** (`PUBLIC_GA_ID` in
+The public site loads Google Analytics 4 (`G-L26CY4M2F6`) **only on prod builds** (`PUBLIC_GA_ID` in
 `.github/workflows/deploy.yml`) and **only after the visitor clicks Accept** on the consent banner
 (Washington My Health My Data Act). A Global Privacy Control signal counts as Decline. Google signals
 and ad personalization are off; `/thank-you` and the 404 page never load it.
