@@ -106,7 +106,7 @@ jobs:
         run: pnpm --filter site build
         env:
           # GA4 measurement ID (public; it ships in the page). Loads only after visitor consent.
-          PUBLIC_GA_ID: G-XT2LGD6KEM
+          PUBLIC_GA_ID: G-L26CY4M2F6
       - name: Build admin (always noindex)
         run: pnpm --filter admin build
       - name: Deploy hosting (site + admin)
