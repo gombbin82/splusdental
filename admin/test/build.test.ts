@@ -44,6 +44,15 @@ describe('admin host', () => {
     }
   });
 
+  it('signs returning users in automatically and renews before the token expires', () => {
+    const src = read('../src/app/shell.ts');
+    expect(src).toContain('auto_select: true');
+    expect(src).toMatch(
+      /show\('signin'\);\s*\/\/[^\n]*\n(\s*\/\/[^\n]*\n)*\s*gsi\.accounts\.id\.prompt\(\);/,
+    );
+    expect(src).toContain('function scheduleRefresh');
+  });
+
   it('does not load fonts from third parties (CSP font-src self)', () => {
     for (const p of pages) expect(read(`../src/pages/${p}`)).not.toContain('fonts.googleapis.com');
     expect(shell).not.toContain('fonts.googleapis.com');
