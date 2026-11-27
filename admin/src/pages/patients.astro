@@ -1,0 +1,178 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+import { RELATIONSHIPS } from '../app/records-labels';
+---
+
+<AppShell title="Patients" current="patients" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Patients</h1>
+      <p class="page-sub">Patients and policyholders, with their primary dental insurance.</p>
+    </div>
+    <button class="btn btn-filled" type="button" id="new-patient">
+      <Icon name="add" size={20} /> Add patient
+    </button>
+  </header>
+
+  <div id="db-note" class="note note-info" role="status" hidden>
+    <Icon name="info" size={20} />
+    <span>No database is configured for this environment yet.</span>
+  </div>
+
+  <section class="card table-card" aria-label="Patients">
+    <div class="card-head">
+      <label class="search">
+        <Icon name="search" size={20} />
+        <input id="search" type="search" placeholder="Search name or chart #" aria-label="Search patients" autocomplete="off" />
+      </label>
+      <span class="settings-status" id="count"></span>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Chart #</th>
+            <th scope="col">Birth date</th>
+            <th scope="col">Insurance</th>
+            <th scope="col">Subscriber</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="patients-body">
+          <tr><td colspan="6" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="patient-dialog" class="dialog dialog-lg" aria-labelledby="patient-title">
+    <form id="patient-form" autocomplete="off" novalidate>
+      <div class="dialog-head">
+        <h2 id="patient-title">Add patient</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid cols-4">
+          <label class="field">
+            <span class="field-label">First name</span>
+            <input name="firstName" maxlength="35" />
+          </label>
+          <label class="field">
+            <span class="field-label">Middle <small>optional</small></span>
+            <input name="middleName" maxlength="25" />
+          </label>
+          <label class="field">
+            <span class="field-label">Last name</span>
+            <input name="lastName" maxlength="60" />
+          </label>
+          <label class="field">
+            <span class="field-label">Chart # <small>optional</small></span>
+            <input name="chartNumber" maxlength="20" />
+          </label>
+          <label class="field">
+            <span class="field-label">Birth date</span>
+            <input name="birthDate" type="date" />
+          </label>
+          <label class="field">
+            <span class="field-label">Sex</span>
+            <select name="sex">
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Phone <small>optional</small></span>
+            <input name="phone" inputmode="tel" maxlength="14" />
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Street address</span>
+            <input name="address1" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">Apt / unit <small>optional</small></span>
+            <input name="address2" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">City</span>
+            <input name="city" maxlength="30" />
+          </label>
+          <label class="field">
+            <span class="field-label">State</span>
+            <input name="state" maxlength="2" />
+          </label>
+          <label class="field">
+            <span class="field-label">ZIP</span>
+            <input name="zip" inputmode="numeric" maxlength="10" />
+          </label>
+        </div>
+
+        <h3 class="claim-h3">Primary dental insurance</h3>
+        <div class="form-grid cols-4">
+          <label class="field span-2">
+            <span class="field-label">Insurance company</span>
+            <select name="coverage.payerId">
+              <option value="">None</option>
+            </select>
+            <span class="field-hint">Add companies on the <a href="/insurance">Insurance</a> page.</span>
+          </label>
+          <label class="field" data-cov>
+            <span class="field-label">Patient is the subscriber's</span>
+            <select name="coverage.relationship">
+              {Object.entries(RELATIONSHIPS).map(([v, l]) => <option value={v}>{v === '18' ? 'Self (is the subscriber)' : l}</option>)}
+            </select>
+          </label>
+          <label class="field" data-cov data-dependent hidden>
+            <span class="field-label">Subscriber</span>
+            <select name="coverage.subscriberId">
+              <option value="">Choose…</option>
+            </select>
+            <span class="field-hint">Add the policyholder as a person first.</span>
+          </label>
+          <label class="field" data-cov>
+            <span class="field-label">Member ID</span>
+            <input name="coverage.memberId" maxlength="80" />
+          </label>
+          <label class="field" data-cov>
+            <span class="field-label">Group # <small>optional</small></span>
+            <input name="coverage.groupNumber" maxlength="50" />
+          </label>
+          <label class="field span-2" data-cov>
+            <span class="field-label">Group / employer <small>optional</small></span>
+            <input name="coverage.groupName" maxlength="60" />
+          </label>
+        </div>
+
+        <div class="checks">
+          <label><input type="checkbox" name="active" checked /> Active</label>
+        </div>
+        <p id="patient-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger-text" type="button" id="patient-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-text" type="button" data-close>Cancel</button>
+        <button class="btn btn-filled" type="submit" id="patient-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="tpl-edit">
+    <button class="icon-btn" type="button" title="Edit">
+      <Icon name="edit" size={18} />
+    </button>
+  </template>
+</AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initPatients } from '../app/patients';
+
+  onReady(() => initPatients());
+</script>

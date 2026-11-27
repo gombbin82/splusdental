@@ -17,6 +17,8 @@ ENV NODE_ENV=production PORT=8080
 COPY --from=build /out/package.json ./
 COPY --from=build /out/node_modules ./node_modules
 COPY --from=build /out/dist ./dist
+# SQL migrations, applied on startup when DATABASE_URL is set.
+COPY --from=build /repo/api/drizzle ./drizzle
 USER nonroot
 EXPOSE 8080
 CMD ["dist/server.js"]

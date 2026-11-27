@@ -5,7 +5,17 @@ import '@fontsource-variable/figtree';
 import '../app/admin.css';
 import Icon from '../components/Icon.astro';
 
-export type Page = 'home' | 'payment-links' | 'payments' | 'reports' | 'traffic' | 'settings';
+export type Page =
+  | 'home'
+  | 'payment-links'
+  | 'payments'
+  | 'claims'
+  | 'providers'
+  | 'patients'
+  | 'insurance'
+  | 'reports'
+  | 'traffic'
+  | 'settings';
 
 interface Props {
   title: string;
@@ -22,6 +32,10 @@ const main: { id: Page; href: string; label: string; icon: string; badge?: boole
   { id: 'payments', href: '/payments', label: 'Payments', icon: 'credit_card', badge: true },
 ];
 const admin: { id: Page; href: string; label: string; icon: string }[] = [
+  { id: 'claims', href: '/claims', label: 'Insurance claims', icon: 'assignment' },
+  { id: 'patients', href: '/patients', label: 'Patients', icon: 'group' },
+  { id: 'insurance', href: '/insurance', label: 'Insurance', icon: 'shield' },
+  { id: 'providers', href: '/providers', label: 'Providers', icon: 'badge' },
   { id: 'reports', href: '/reports', label: 'Reports', icon: 'receipt_long' },
   { id: 'traffic', href: '/traffic', label: 'Website traffic', icon: 'monitoring' },
   { id: 'settings', href: '/settings', label: 'Settings', icon: 'settings' },

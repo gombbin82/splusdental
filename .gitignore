@@ -18,3 +18,9 @@ service-account*.json
 
 # OAuth client downloads from the Cloud Console
 client_secret*.json
+
+# Local PGlite database (api dev)
+.data/
+
+# Local-only data files (e.g. api/seed.local.json with practice records)
+*.local.json

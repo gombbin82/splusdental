@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795757303227,
+      "tag": "0000_omniscient_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795759319198,
+      "tag": "0001_cultured_dormammu",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795765806869,
+      "tag": "0002_equal_epoch",
+      "breakpoints": true
+    }
+  ]
+}

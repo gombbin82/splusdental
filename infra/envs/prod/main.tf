@@ -35,18 +35,23 @@ provider "google-beta" {
 module "env" {
   source = "../../modules/env"
 
-  project_id          = var.project_id
-  region              = var.region
-  env                 = "prod"
-  public_site_url     = "https://splus.dental"
-  oauth_client_id     = var.oauth_client_id
-  admin_emails        = var.admin_emails
-  staff_emails        = var.staff_emails
-  gmail_sender        = var.gmail_sender
-  ga4_property_id     = var.ga4_property_id
-  deployer_sa_email   = "splus-web-deploy@${var.project_id}.iam.gserviceaccount.com"
-  hosting_site_id     = var.hosting_site_id
-  enable_service      = var.enable_service
+  project_id        = var.project_id
+  region            = var.region
+  env               = "prod"
+  public_site_url   = "https://splus.dental"
+  oauth_client_id   = var.oauth_client_id
+  admin_emails      = var.admin_emails
+  staff_emails      = var.staff_emails
+  gmail_sender      = var.gmail_sender
+  ga4_property_id   = var.ga4_property_id
+  deployer_sa_email = "splus-web-deploy@${var.project_id}.iam.gserviceaccount.com"
+  hosting_site_id   = var.hosting_site_id
+  enable_service    = var.enable_service
+
+  enable_database     = var.enable_database
+  sql_instance_name   = "splus-web-pg"
+  sql_connection_name = "${var.project_id}:${var.region}:splus-web-pg"
+  enable_seed         = var.enable_seed
   deletion_protection = true
 
   admin_hosting_site_id = var.admin_hosting_site_id

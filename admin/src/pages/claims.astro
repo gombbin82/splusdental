@@ -1,0 +1,476 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+import { AREA_CODES } from '../app/x12/837d';
+
+const areas = Object.entries(AREA_CODES);
+---
+
+<AppShell title="Insurance claims" current="claims" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Insurance claim file</h1>
+      <p class="page-sub">
+        Build an X12 837D dental claim and download it for DentalXChange → Batch Claim → Upload Claims.
+      </p>
+    </div>
+  </header>
+
+  <div class="note note-info">
+    <Icon name="lock" size={20} />
+    <span>
+      The claim file is built in this browser tab and isn't saved on our server. After you upload it
+      to DentalXChange, delete it from Downloads.
+    </span>
+  </div>
+
+  <!-- Practice + clearinghouse settings: saved in this browser (no patient data). -->
+  <details class="card claim-settings" id="settings">
+    <summary class="card-head">
+      <h2>Practice and clearinghouse settings</h2>
+      <span class="settings-status" id="settings-status"></span>
+    </summary>
+    <form id="settings-form" class="claim-body" autocomplete="off" novalidate>
+      <p class="page-sub">
+        Saved in this browser only. Get the clearinghouse IDs from DentalXChange support or copy them
+        from a claim file Fuse exports.
+      </p>
+
+      <div id="billing-manual" class="manual-block">
+      <h3 class="claim-h3">Billing provider</h3>
+      <div class="form-grid cols-4">
+        <label class="field span-2">
+          <span class="field-label">Name on the NPI record</span>
+          <input name="billing.orgName" maxlength="60" />
+        </label>
+        <label class="field">
+          <span class="field-label">Type</span>
+          <select name="billing.entity">
+            <option value="organization">Organization (group NPI)</option>
+            <option value="person">Individual dentist</option>
+          </select>
+        </label>
+        <label class="field" data-show-entity="person" hidden>
+          <span class="field-label">First name</span>
+          <input name="billing.firstName" maxlength="35" />
+        </label>
+        <label class="field">
+          <span class="field-label">NPI</span>
+          <input name="billing.npi" inputmode="numeric" maxlength="10" />
+        </label>
+        <label class="field">
+          <span class="field-label">Tax ID (EIN)</span>
+          <input name="billing.taxId" inputmode="numeric" maxlength="10" placeholder="12-3456789" />
+        </label>
+        <label class="field">
+          <span class="field-label">Taxonomy <small>optional</small></span>
+          <input name="billing.taxonomy" maxlength="10" placeholder="1223G0001X" />
+        </label>
+        <label class="field span-2">
+          <span class="field-label">Street address (no PO box)</span>
+          <input name="billing.address.line1" maxlength="55" />
+        </label>
+        <label class="field">
+          <span class="field-label">Suite <small>optional</small></span>
+          <input name="billing.address.line2" maxlength="55" />
+        </label>
+        <label class="field">
+          <span class="field-label">City</span>
+          <input name="billing.address.city" maxlength="30" />
+        </label>
+        <label class="field">
+          <span class="field-label">State</span>
+          <input name="billing.address.state" maxlength="2" />
+        </label>
+        <label class="field">
+          <span class="field-label">ZIP+4</span>
+          <input name="billing.address.zip" inputmode="numeric" maxlength="10" placeholder="98043-1234" />
+        </label>
+      </div>
+
+      </div>
+
+      <div id="rendering-manual" class="manual-block">
+      <h3 class="claim-h3">Treating dentist</h3>
+      <div class="form-grid cols-4">
+        <label class="field">
+          <span class="field-label">First name</span>
+          <input name="rendering.firstName" maxlength="35" />
+        </label>
+        <label class="field">
+          <span class="field-label">Last name</span>
+          <input name="rendering.lastName" maxlength="60" />
+        </label>
+        <label class="field">
+          <span class="field-label">Individual NPI</span>
+          <input name="rendering.npi" inputmode="numeric" maxlength="10" />
+        </label>
+        <label class="field">
+          <span class="field-label">Taxonomy</span>
+          <input name="rendering.taxonomy" maxlength="10" placeholder="1223G0001X" />
+        </label>
+      </div>
+      <p class="field-hint">
+        Sent as the rendering provider when its NPI differs from the billing NPI. 1223G0001X is general
+        practice dentistry.
+      </p>
+      </div>
+
+      <h3 class="claim-h3">Clearinghouse (file header)</h3>
+      <div class="form-grid cols-4">
+        <label class="field">
+          <span class="field-label">Sender qualifier (ISA05)</span>
+          <input name="envelope.senderQualifier" maxlength="2" />
+        </label>
+        <label class="field">
+          <span class="field-label">Sender ID (ISA06)</span>
+          <input name="envelope.senderId" maxlength="15" />
+        </label>
+        <label class="field">
+          <span class="field-label">Receiver qualifier (ISA07)</span>
+          <input name="envelope.receiverQualifier" maxlength="2" />
+        </label>
+        <label class="field">
+          <span class="field-label">Receiver ID (ISA08)</span>
+          <input name="envelope.receiverId" maxlength="15" />
+        </label>
+        <label class="field">
+          <span class="field-label">App sender code (GS02)</span>
+          <input name="envelope.gsSenderCode" maxlength="15" />
+        </label>
+        <label class="field">
+          <span class="field-label">App receiver code (GS03)</span>
+          <input name="envelope.gsReceiverCode" maxlength="15" />
+        </label>
+        <label class="field">
+          <span class="field-label">Submitter name (1000A)</span>
+          <input name="envelope.submitterName" maxlength="60" />
+        </label>
+        <label class="field">
+          <span class="field-label">Submitter ID (1000A)</span>
+          <input name="envelope.submitterId" maxlength="80" />
+        </label>
+        <label class="field">
+          <span class="field-label">Contact name</span>
+          <input name="envelope.contactName" maxlength="60" />
+        </label>
+        <label class="field">
+          <span class="field-label">Contact phone</span>
+          <input name="envelope.contactPhone" inputmode="tel" maxlength="14" />
+        </label>
+        <label class="field">
+          <span class="field-label">Receiver name (1000B)</span>
+          <input name="envelope.receiverName" maxlength="60" />
+        </label>
+        <label class="field">
+          <span class="field-label">Receiver ID (1000B)</span>
+          <input name="envelope.receiverId1000B" maxlength="80" />
+        </label>
+        <label class="field">
+          <span class="field-label">Mode (ISA15)</span>
+          <select name="envelope.usage">
+            <option value="T">T: test</option>
+            <option value="P">P: production</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Next control number</span>
+          <input name="controlNumber" inputmode="numeric" maxlength="9" />
+        </label>
+        <div class="checks span-all checks-inline">
+          <label><input type="checkbox" name="envelope.ackRequested" /> Ask for a TA1 acknowledgment</label>
+          <label><input type="checkbox" name="newlines" /> Line break after each segment</label>
+        </div>
+      </div>
+    </form>
+  </details>
+
+  <form id="claim-form" class="card claim-body" autocomplete="off" novalidate>
+    <div class="pick-grid" id="pickers" hidden>
+      <div class="pick">
+        <label class="field">
+          <span class="field-label">Billing provider</span>
+          <select id="billing-pick"></select>
+        </label>
+        <p class="pick-summary" id="billing-summary"></p>
+      </div>
+      <div class="pick">
+        <label class="field">
+          <span class="field-label">Treating dentist</span>
+          <select id="rendering-pick"></select>
+        </label>
+        <p class="pick-summary" id="rendering-summary"></p>
+      </div>
+      <div class="pick">
+        <label class="field">
+          <span class="field-label">Patient</span>
+          <select id="patient-pick"></select>
+        </label>
+        <p class="pick-summary" id="patient-summary"></p>
+      </div>
+    </div>
+
+    <div id="patient-manual" class="manual-block">
+    <h2 class="claim-h2">Insurance</h2>
+    <div class="form-grid cols-4">
+      <label class="field span-2">
+        <span class="field-label">Payer name</span>
+        <input name="payer.name" maxlength="60" />
+      </label>
+      <label class="field">
+        <span class="field-label">Payer ID</span>
+        <input name="payer.id" maxlength="80" aria-describedby="payer-id-hint" />
+        <span class="field-hint" id="payer-id-hint">From DentalXChange's payer list</span>
+      </label>
+      <label class="field">
+        <span class="field-label">Plan type (SBR09)</span>
+        <select name="payer.filingIndicator">
+          <option value="CI">Commercial</option>
+          <option value="12">PPO</option>
+          <option value="17">Dental maintenance org (DMO)</option>
+          <option value="HM">HMO</option>
+          <option value="BL">Blue Cross / Blue Shield</option>
+          <option value="MC">Medicaid</option>
+          <option value="CH">TRICARE</option>
+          <option value="FI">Federal employees (FEP)</option>
+        </select>
+      </label>
+    </div>
+
+    <h2 class="claim-h2">Subscriber (policyholder)</h2>
+    <div class="form-grid cols-4">
+      <label class="field">
+        <span class="field-label">First name</span>
+        <input name="subscriber.firstName" maxlength="35" />
+      </label>
+      <label class="field">
+        <span class="field-label">Middle <small>optional</small></span>
+        <input name="subscriber.middle" maxlength="25" />
+      </label>
+      <label class="field">
+        <span class="field-label">Last name</span>
+        <input name="subscriber.lastName" maxlength="60" />
+      </label>
+      <label class="field">
+        <span class="field-label">Member ID</span>
+        <input name="subscriber.memberId" maxlength="80" />
+      </label>
+      <label class="field">
+        <span class="field-label">Birth date</span>
+        <input name="subscriber.birthDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">Sex</span>
+        <select name="subscriber.sex">
+          <option value="F">Female</option>
+          <option value="M">Male</option>
+          <option value="U">Unknown</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Group number <small>optional</small></span>
+        <input name="subscriber.groupNumber" maxlength="50" />
+      </label>
+      <label class="field">
+        <span class="field-label">Group / employer name <small>optional</small></span>
+        <input name="subscriber.groupName" maxlength="60" />
+      </label>
+      <label class="field span-2">
+        <span class="field-label">Street address</span>
+        <input name="subscriber.address.line1" maxlength="55" />
+      </label>
+      <label class="field">
+        <span class="field-label">Apt / unit <small>optional</small></span>
+        <input name="subscriber.address.line2" maxlength="55" />
+      </label>
+      <label class="field">
+        <span class="field-label">City</span>
+        <input name="subscriber.address.city" maxlength="30" />
+      </label>
+      <label class="field">
+        <span class="field-label">State</span>
+        <input name="subscriber.address.state" maxlength="2" />
+      </label>
+      <label class="field">
+        <span class="field-label">ZIP</span>
+        <input name="subscriber.address.zip" inputmode="numeric" maxlength="10" />
+      </label>
+    </div>
+
+    <h2 class="claim-h2">Patient</h2>
+    <fieldset class="segmented">
+      <legend class="visually-hidden">Who is the patient?</legend>
+      <label><input type="radio" name="who" value="self" checked /> The subscriber</label>
+      <label><input type="radio" name="who" value="dependent" /> A dependent</label>
+    </fieldset>
+    <div class="form-grid cols-4" id="patient-fields" hidden>
+      <label class="field">
+        <span class="field-label">First name</span>
+        <input name="patient.firstName" maxlength="35" />
+      </label>
+      <label class="field">
+        <span class="field-label">Middle <small>optional</small></span>
+        <input name="patient.middle" maxlength="25" />
+      </label>
+      <label class="field">
+        <span class="field-label">Last name</span>
+        <input name="patient.lastName" maxlength="60" />
+      </label>
+      <label class="field">
+        <span class="field-label">Relationship to subscriber</span>
+        <select name="patient.relationship">
+          <option value="19">Child</option>
+          <option value="01">Spouse</option>
+          <option value="53">Life partner</option>
+          <option value="G8">Other</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Birth date</span>
+        <input name="patient.birthDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">Sex</span>
+        <select name="patient.sex">
+          <option value="F">Female</option>
+          <option value="M">Male</option>
+          <option value="U">Unknown</option>
+        </select>
+      </label>
+      <div class="checks span-all checks-inline">
+        <label><input type="checkbox" name="sameAddress" checked /> Lives at the subscriber's address</label>
+      </div>
+      <div class="form-grid cols-4 span-all" id="patient-address" hidden>
+        <label class="field span-2">
+          <span class="field-label">Street address</span>
+          <input name="patient.address.line1" maxlength="55" />
+        </label>
+        <label class="field">
+          <span class="field-label">Apt / unit <small>optional</small></span>
+          <input name="patient.address.line2" maxlength="55" />
+        </label>
+        <label class="field">
+          <span class="field-label">City</span>
+          <input name="patient.address.city" maxlength="30" />
+        </label>
+        <label class="field">
+          <span class="field-label">State</span>
+          <input name="patient.address.state" maxlength="2" />
+        </label>
+        <label class="field">
+          <span class="field-label">ZIP</span>
+          <input name="patient.address.zip" inputmode="numeric" maxlength="10" />
+        </label>
+      </div>
+    </div>
+    </div>
+
+    <h2 class="claim-h2">Claim</h2>
+    <div class="form-grid cols-4">
+      <label class="field">
+        <span class="field-label">Claim number</span>
+        <input name="controlNumber" maxlength="20" aria-describedby="claim-no-hint" />
+        <span class="field-hint" id="claim-no-hint">Ours, unique per claim. No names.</span>
+      </label>
+      <label class="field">
+        <span class="field-label">Type</span>
+        <select name="frequency">
+          <option value="1">Original</option>
+          <option value="7">Replacement of a prior claim</option>
+          <option value="8">Void a prior claim</option>
+        </select>
+      </label>
+      <label class="field" data-show-frequency hidden>
+        <span class="field-label">Payer's original claim #</span>
+        <input name="originalClaimNumber" maxlength="50" />
+      </label>
+      <label class="field">
+        <span class="field-label">Prior authorization <small>optional</small></span>
+        <input name="priorAuth" maxlength="50" />
+      </label>
+      <label class="field">
+        <span class="field-label">Place of service</span>
+        <select name="placeOfService">
+          <option value="11">11: Office</option>
+          <option value="12">12: Home</option>
+          <option value="31">31: Skilled nursing facility</option>
+          <option value="32">32: Nursing facility</option>
+        </select>
+      </label>
+    </div>
+
+    <h2 class="claim-h2">Procedures</h2>
+    <div class="table-wrap">
+      <table class="data-table lines-table">
+        <thead>
+          <tr>
+            <th scope="col">Date of service</th>
+            <th scope="col">CDT code</th>
+            <th scope="col">Tooth</th>
+            <th scope="col">Surfaces</th>
+            <th scope="col">Area</th>
+            <th scope="col" class="num">Fee</th>
+            <th scope="col"><span class="visually-hidden">Remove</span></th>
+          </tr>
+        </thead>
+        <tbody id="lines-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">
+              <button class="btn btn-text" type="button" id="add-line">
+                <Icon name="add" size={18} /> Add procedure
+              </button>
+            </td>
+            <td class="num"><strong id="total">$0.00</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div id="problems" class="claim-problems" role="alert" hidden>
+      <strong>Fix these before downloading:</strong>
+      <ul id="problems-list"></ul>
+    </div>
+
+    <div class="claim-actions">
+      <button class="btn btn-text" type="button" id="clear">Clear claim</button>
+      <button class="btn btn-tonal" type="button" id="preview-btn">
+        <Icon name="visibility" size={18} /> Preview
+      </button>
+      <button class="btn btn-filled" type="submit">
+        <Icon name="download" size={18} /> Download 837D file
+      </button>
+    </div>
+
+    <pre id="preview" class="claim-preview" tabindex="0" aria-label="File preview" hidden></pre>
+  </form>
+
+  <template id="tpl-line">
+    <tr>
+      <td><input data-k="serviceDate" type="date" aria-label="Date of service" /></td>
+      <td><input data-k="code" maxlength="5" placeholder="D0120" aria-label="CDT code" class="w-code" /></td>
+      <td><input data-k="tooth" maxlength="2" aria-label="Tooth" class="w-sm" /></td>
+      <td><input data-k="surfaces" maxlength="5" aria-label="Surfaces" class="w-sm" /></td>
+      <td>
+        <select data-k="area" aria-label="Area">
+          <option value="">—</option>
+          {areas.map(([v, label]) => <option value={v}>{v}: {label}</option>)}
+        </select>
+      </td>
+      <td class="num"><input data-k="fee" inputmode="decimal" placeholder="0.00" aria-label="Fee" class="w-fee" /></td>
+      <td>
+        <button class="icon-btn icon-btn-danger" type="button" data-remove title="Remove procedure" aria-label="Remove procedure">
+          <Icon name="close" size={18} />
+        </button>
+      </td>
+    </tr>
+  </template>
+</AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initClaims } from '../app/claims';
+
+  onReady(() => initClaims());
+</script>

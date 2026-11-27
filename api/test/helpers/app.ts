@@ -15,6 +15,8 @@ export const TEST_CONFIG: Config = {
   gmailSender: 'info@splus.dental',
   runtimeSaEmail: '',
   ga4PropertyId: '',
+  databaseUrl: '',
+  seedJson: '',
   port: 8080,
 };
 
@@ -113,7 +115,7 @@ export function fakeEmail() {
 export function testApp(
   stripe: ReturnType<typeof fakeStripe> = fakeStripe(),
   config = TEST_CONFIG,
-  extra: Partial<Pick<AppDeps, 'email' | 'emailLimiter' | 'analytics' | 'now'>> = {},
+  extra: Partial<Pick<AppDeps, 'email' | 'emailLimiter' | 'analytics' | 'db' | 'now'>> = {},
 ) {
   return createApp({
     config,

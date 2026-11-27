@@ -39,7 +39,13 @@ describe('admin host', () => {
   });
 
   it('marks admin pages adminOnly', () => {
-    for (const p of ['reports.astro', 'traffic.astro', 'settings.astro']) {
+    for (const p of [
+      'reports.astro',
+      'traffic.astro',
+      'settings.astro',
+      'claims.astro',
+      'providers.astro',
+    ]) {
       expect(read(`../src/pages/${p}`), p).toMatch(/<AppShell[^>]*adminOnly/);
     }
   });

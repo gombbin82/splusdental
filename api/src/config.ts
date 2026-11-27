@@ -15,6 +15,10 @@ export interface Config {
   runtimeSaEmail: string;
   /** Numeric GA4 property ID for the admin traffic page. '' = traffic reports off. */
   ga4PropertyId: string;
+  /** Postgres connection string (Cloud SQL). '' = local PGlite in dev, no database elsewhere. */
+  databaseUrl: string;
+  /** Practice records (seed file JSON) to add on startup if missing. Staging/prod: from Secret Manager. */
+  seedJson: string;
   port: number;
 }
 
@@ -60,6 +64,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     ga4PropertyId: /^\d+$/.test((env.GA4_PROPERTY_ID ?? '').trim())
       ? (env.GA4_PROPERTY_ID ?? '').trim()
       : '',
+    databaseUrl: (env.DATABASE_URL ?? '').trim(),
+    seedJson: (env.SEED_JSON ?? '').trim(),
     port: Number(env.PORT || 8080),
   };
 }

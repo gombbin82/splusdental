@@ -4,7 +4,12 @@
 locals {
   name = "splus-web-api-${var.env}"
 
-  secrets = toset(["stripe-secret-key", "stripe-webhook-secret"])
+  # Empty shells; versions are added with gcloud (infra/README.md). `seed` holds practice records
+  # (providers, locations, payers) as JSON, never patient data.
+  secrets = toset(["stripe-secret-key", "stripe-webhook-secret", "seed"])
+
+  db_name = "splus_web_${var.env}"
+  db_user = "splus-web-${var.env}"
 
   labels = {
     app        = "splus-web"
@@ -60,6 +65,72 @@ resource "google_secret_manager_secret_iam_member" "runtime_access" {
   member    = google_service_account.runtime.member
 }
 
+# --- Database (on the shared Cloud SQL instance) -----------------------------------------------
+
+resource "google_sql_database" "app" {
+  count = var.enable_database ? 1 : 0
+
+  project  = var.project_id
+  instance = var.sql_instance_name
+  name     = local.db_name
+}
+
+resource "random_password" "db" {
+  count = var.enable_database ? 1 : 0
+
+  length  = 32
+  special = false # goes into a connection URL
+}
+
+resource "google_sql_user" "app" {
+  count = var.enable_database ? 1 : 0
+
+  project  = var.project_id
+  instance = var.sql_instance_name
+  name     = local.db_user
+  password = random_password.db[0].result
+}
+
+# DATABASE_URL for node-postgres over the Cloud SQL connector's unix socket. The password is in
+# Terraform state (GCS bucket) and Secret Manager only.
+resource "google_secret_manager_secret" "database_url" {
+  count = var.enable_database ? 1 : 0
+
+  project   = var.project_id
+  secret_id = "splus-web-${var.env}-database-url"
+  labels    = local.labels
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "database_url" {
+  count = var.enable_database ? 1 : 0
+
+  secret      = google_secret_manager_secret.database_url[0].id
+  secret_data = "postgresql://${local.db_user}:${random_password.db[0].result}@/${local.db_name}?host=/cloudsql/${var.sql_connection_name}"
+}
+
+resource "google_secret_manager_secret_iam_member" "runtime_database_url" {
+  count = var.enable_database ? 1 : 0
+
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.database_url[0].secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = google_service_account.runtime.member
+}
+
+# Cloud SQL Client can only be granted per project; the runtime can still only log in to this env's
+# database (its own user/password).
+resource "google_project_iam_member" "runtime_sql_client" {
+  count = var.enable_database ? 1 : 0
+
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = google_service_account.runtime.member
+}
+
 # --- Cloud Run service -------------------------------------------------------------------------
 
 resource "google_cloud_run_v2_service" "api" {
@@ -78,6 +149,16 @@ resource "google_cloud_run_v2_service" "api" {
     scaling {
       min_instance_count = 0
       max_instance_count = var.max_instances
+    }
+
+    dynamic "volumes" {
+      for_each = var.enable_database ? [1] : []
+      content {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [var.sql_connection_name]
+        }
+      }
     }
 
     containers {
@@ -132,6 +213,40 @@ resource "google_cloud_run_v2_service" "api" {
           }
         }
       }
+
+      dynamic "env" {
+        for_each = var.enable_database ? [1] : []
+        content {
+          name = "DATABASE_URL"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.database_url[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.enable_database && var.enable_seed ? [1] : []
+        content {
+          name = "SEED_JSON"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.this["seed"].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+
+      dynamic "volume_mounts" {
+        for_each = var.enable_database ? [1] : []
+        content {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
+      }
     }
   }
 
@@ -145,7 +260,13 @@ resource "google_cloud_run_v2_service" "api" {
     ]
   }
 
-  depends_on = [google_secret_manager_secret_iam_member.runtime_access]
+  depends_on = [
+    google_secret_manager_secret_iam_member.runtime_access,
+    google_secret_manager_secret_iam_member.runtime_database_url,
+    google_secret_manager_secret_version.database_url,
+    google_project_iam_member.runtime_sql_client,
+    google_sql_user.app,
+  ]
 }
 
 # Public invoker: Firebase Hosting rewrites call the service anonymously; the app enforces auth.

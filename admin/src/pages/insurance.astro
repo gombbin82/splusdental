@@ -1,0 +1,100 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+import { FILING_INDICATORS } from '../app/records-labels';
+---
+
+<AppShell title="Insurance" current="insurance" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Insurance companies</h1>
+      <p class="page-sub">Payers and their DentalXChange payer IDs.</p>
+    </div>
+    <button class="btn btn-filled" type="button" id="new-payer">
+      <Icon name="add" size={20} /> Add insurance
+    </button>
+  </header>
+
+  <div id="db-note" class="note note-info" role="status" hidden>
+    <Icon name="info" size={20} />
+    <span>No database is configured for this environment yet.</span>
+  </div>
+
+  <section class="card table-card" aria-label="Insurance companies">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Payer ID</th>
+            <th scope="col">Plan type</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="payers-body">
+          <tr><td colspan="6" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="payer-dialog" class="dialog" aria-labelledby="payer-title">
+    <form id="payer-form" autocomplete="off" novalidate>
+      <div class="dialog-head">
+        <h2 id="payer-title">Add insurance</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid">
+          <label class="field span-2">
+            <span class="field-label">Name</span>
+            <input name="name" maxlength="60" placeholder="Delta Dental of Washington" />
+          </label>
+          <label class="field">
+            <span class="field-label">Payer ID</span>
+            <input name="payerId" maxlength="80" />
+            <span class="field-hint">From DentalXChange's payer list</span>
+          </label>
+          <label class="field">
+            <span class="field-label">Plan type (default)</span>
+            <select name="filingIndicator">
+              {Object.entries(FILING_INDICATORS).map(([v, l]) => <option value={v}>{l}</option>)}
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Phone <small>optional</small></span>
+            <input name="phone" inputmode="tel" maxlength="14" />
+          </label>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" name="active" checked /> Active</label>
+        </div>
+        <p id="payer-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger-text" type="button" id="payer-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-text" type="button" data-close>Cancel</button>
+        <button class="btn btn-filled" type="submit" id="payer-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="tpl-edit">
+    <button class="icon-btn" type="button" title="Edit">
+      <Icon name="edit" size={18} />
+    </button>
+  </template>
+</AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initInsurance } from '../app/insurance';
+
+  onReady(() => initInsurance());
+</script>

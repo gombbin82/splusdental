@@ -18,6 +18,7 @@ locals {
     "iamcredentials.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
+    "sqladmin.googleapis.com",
     "sts.googleapis.com",
   ])
 }
@@ -153,6 +154,57 @@ resource "google_billing_budget" "project" {
   }
   threshold_rules {
     threshold_percent = 1.0
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# --- Cloud SQL (Postgres) ----------------------------------------------------------------------
+# One small instance for splus-web; staging and prod each get their own database, user and password
+# (infra/modules/env). Not kiwidental's instance. Cloud Run connects through the built-in Cloud SQL
+# connector (unix socket, IAM-authorized), so there are no authorized networks and no public access
+# beyond the connector. Patient data lives here: sign Google Cloud's HIPAA BAA before real PHI.
+
+resource "google_sql_database_instance" "pg" {
+  project             = var.project_id
+  name                = "splus-web-pg"
+  region              = var.region
+  database_version    = "POSTGRES_16"
+  deletion_protection = true
+
+  settings {
+    edition           = "ENTERPRISE"
+    tier              = var.db_tier
+    availability_type = "ZONAL"
+    disk_type         = "PD_SSD"
+    disk_size         = 10
+    disk_autoresize   = true
+
+    backup_configuration {
+      enabled                        = true
+      point_in_time_recovery_enabled = true
+      start_time                     = "10:00" # UTC, ~2-3am Pacific
+      transaction_log_retention_days = 7
+
+      backup_retention_settings {
+        retained_backups = 14
+      }
+    }
+
+    ip_configuration {
+      ipv4_enabled = true # needed by the Cloud SQL connector; no authorized networks
+      ssl_mode     = "ENCRYPTED_ONLY"
+    }
+
+    maintenance_window {
+      day  = 7 # Sunday
+      hour = 11
+    }
+
+    user_labels = {
+      app        = "splus-web"
+      managed-by = "terraform"
+    }
   }
 
   depends_on = [google_project_service.apis]

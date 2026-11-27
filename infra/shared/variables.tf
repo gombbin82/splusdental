@@ -26,3 +26,9 @@ variable "budget_amount_usd" {
   type        = number
   default     = 25
 }
+
+variable "db_tier" {
+  description = "Cloud SQL machine tier. db-f1-micro is the cheapest (~$10/month); db-custom-1-3840 if it feels slow."
+  type        = string
+  default     = "db-f1-micro"
+}

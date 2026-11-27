@@ -1,0 +1,249 @@
+---
+import AppShell from '../layouts/AppShell.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<AppShell title="Providers" current="providers" adminOnly>
+  <header class="page-head">
+    <div>
+      <h1>Providers</h1>
+      <p class="page-sub">
+        The practice and its dentists, as registered with NPPES. Used to fill in insurance claims.
+      </p>
+    </div>
+    <button class="btn btn-filled" type="button" id="new-provider">
+      <Icon name="add" size={20} /> Add provider
+    </button>
+  </header>
+
+  <div id="db-note" class="note note-info" role="status" hidden>
+    <Icon name="info" size={20} />
+    <span>No database is configured for this environment yet, so providers can't be saved here.</span>
+  </div>
+
+  <section class="card table-card" aria-labelledby="providers-heading">
+    <div class="card-head">
+      <h2 id="providers-heading">Practice and clinicians</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">NPI</th>
+            <th scope="col">Taxonomy</th>
+            <th scope="col">Tax ID</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="providers-body">
+          <tr><td colspan="7" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="card-foot">
+      Look up NPIs and taxonomy codes in the{' '}
+      <a href="https://npiregistry.cms.hhs.gov/" target="_blank" rel="noopener">NPI Registry</a>.
+      Claims must use exactly what's on file there and with the insurers.
+    </p>
+  </section>
+
+  <section class="card table-card" aria-labelledby="locations-heading">
+    <div class="card-head">
+      <h2 id="locations-heading">Locations</h2>
+      <button class="btn btn-text" type="button" id="new-location">
+        <Icon name="add" size={18} /> Add location
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Address</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="locations-body">
+          <tr><td colspan="5" class="empty-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="location-dialog" class="dialog" aria-labelledby="location-title">
+    <form id="location-form" autocomplete="off" novalidate>
+      <div class="dialog-head">
+        <h2 id="location-title">Add location</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid">
+          <label class="field span-2">
+            <span class="field-label">Name</span>
+            <input name="name" maxlength="60" />
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Street address</span>
+            <input name="address1" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">Suite <small>optional</small></span>
+            <input name="address2" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">City</span>
+            <input name="city" maxlength="30" />
+          </label>
+          <label class="field">
+            <span class="field-label">State</span>
+            <input name="state" maxlength="2" />
+          </label>
+          <label class="field">
+            <span class="field-label">ZIP</span>
+            <input name="zip" inputmode="numeric" maxlength="10" />
+          </label>
+          <label class="field">
+            <span class="field-label">Phone <small>optional</small></span>
+            <input name="phone" inputmode="tel" maxlength="14" />
+          </label>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" name="active" checked /> Active</label>
+        </div>
+        <p id="location-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger-text" type="button" id="location-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-text" type="button" data-close>Cancel</button>
+        <button class="btn btn-filled" type="submit" id="location-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="provider-dialog" class="dialog" aria-labelledby="provider-title">
+    <form id="provider-form" autocomplete="off" novalidate>
+      <div class="dialog-head">
+        <h2 id="provider-title">Add provider</h2>
+        <button class="icon-btn" type="button" data-close title="Close">
+          <Icon name="close" size={20} />
+          <span class="visually-hidden">Close</span>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <fieldset class="segmented">
+          <legend class="visually-hidden">Provider type</legend>
+          <label><input type="radio" name="kind" value="person" checked /> Dentist or hygienist</label>
+          <label><input type="radio" name="kind" value="organization" /> The practice</label>
+        </fieldset>
+
+        <div class="form-grid">
+          <label class="field span-2" data-kind="organization" hidden>
+            <span class="field-label">Name on the NPI record</span>
+            <input name="orgName" maxlength="60" placeholder="S Plus Dental PLLC" />
+          </label>
+          <label class="field" data-kind="person">
+            <span class="field-label">First name</span>
+            <input name="firstName" maxlength="35" />
+          </label>
+          <label class="field" data-kind="person">
+            <span class="field-label">Last name</span>
+            <input name="lastName" maxlength="60" />
+          </label>
+          <label class="field" data-kind="person">
+            <span class="field-label">Role</span>
+            <select name="role">
+              <option value="dentist">Dentist</option>
+              <option value="hygienist">Hygienist</option>
+              <option value="assistant">Assistant</option>
+            </select>
+          </label>
+          <label class="field" data-kind="person">
+            <span class="field-label">Credential <small>optional</small></span>
+            <input name="credential" maxlength="10" placeholder="DDS" />
+          </label>
+          <label class="field">
+            <span class="field-label">NPI</span>
+            <input name="npi" inputmode="numeric" maxlength="10" />
+            <span class="field-hint" data-kind="organization" hidden>The practice's organization (Type 2) NPI</span>
+            <span class="field-hint" data-kind="person">The person's individual (Type 1) NPI</span>
+          </label>
+          <label class="field">
+            <span class="field-label">Taxonomy</span>
+            <input name="taxonomy" maxlength="10" value="1223G0001X" />
+            <span class="field-hint">1223G0001X = general dentistry</span>
+          </label>
+          <label class="field">
+            <span class="field-label"
+              >Tax ID (EIN) <small data-kind="person">optional</small></span
+            >
+            <input name="taxId" inputmode="numeric" maxlength="10" placeholder="12-3456789" />
+            <span class="field-hint">The practice EIN. Never a Social Security number.</span>
+          </label>
+          <label class="field">
+            <span class="field-label">Phone <small>optional</small></span>
+            <input name="phone" inputmode="tel" maxlength="14" />
+          </label>
+          <label class="field span-2">
+            <span class="field-label"
+              >Street address <small data-kind="person">optional</small></span
+            >
+            <input name="address1" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">Suite <small>optional</small></span>
+            <input name="address2" maxlength="55" />
+          </label>
+          <label class="field">
+            <span class="field-label">City</span>
+            <input name="city" maxlength="30" />
+          </label>
+          <label class="field">
+            <span class="field-label">State</span>
+            <input name="state" maxlength="2" />
+          </label>
+          <label class="field">
+            <span class="field-label">ZIP</span>
+            <input name="zip" inputmode="numeric" maxlength="10" />
+            <span class="field-hint" data-kind="organization" hidden>ZIP+4 required for billing</span>
+          </label>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" name="active" checked /> Active (shown on claims)</label>
+        </div>
+        <p id="provider-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger-text" type="button" id="provider-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-text" type="button" data-close>Cancel</button>
+        <button class="btn btn-filled" type="submit" id="provider-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="tpl-edit">
+    <button class="icon-btn" type="button" title="Edit" aria-label="Edit provider">
+      <Icon name="edit" size={18} />
+    </button>
+  </template>
+</AppShell>
+
+<script>
+  import { onReady } from '../app/shell';
+  import { initProviders } from '../app/providers';
+  import { initLocations } from '../app/locations';
+
+  onReady(() => {
+    initProviders();
+    initLocations();
+  });
+</script>

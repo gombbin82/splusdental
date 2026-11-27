@@ -121,3 +121,27 @@ variable "gmail_sender" {
   type        = string
   default     = ""
 }
+
+variable "enable_database" {
+  description = "Create this env's Postgres database/user on the shared Cloud SQL instance and connect Cloud Run to it (DATABASE_URL)."
+  type        = bool
+  default     = false
+}
+
+variable "sql_instance_name" {
+  description = "Shared Cloud SQL instance name (infra/shared output sql_instance_name). Required when enable_database."
+  type        = string
+  default     = ""
+}
+
+variable "sql_connection_name" {
+  description = "Shared Cloud SQL connection name project:region:instance (infra/shared output sql_connection_name). Required when enable_database."
+  type        = string
+  default     = ""
+}
+
+variable "enable_seed" {
+  description = "Pass the seed secret to Cloud Run as SEED_JSON (practice records added on startup if missing). Turn on only after the secret has a version, see infra/README.md."
+  type        = bool
+  default     = false
+}
