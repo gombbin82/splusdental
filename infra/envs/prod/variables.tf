@@ -69,3 +69,15 @@ variable "gmail_sender" {
   type        = string
   default     = ""
 }
+
+variable "enable_database" {
+  description = "Create this env's database on the shared Cloud SQL instance (apply infra/shared first) and connect the API to it."
+  type        = bool
+  default     = false
+}
+
+variable "enable_seed" {
+  description = "Load practice records from the splus-web-<env>-seed secret on API startup. Add a secret version first (infra/README.md)."
+  type        = bool
+  default     = false
+}

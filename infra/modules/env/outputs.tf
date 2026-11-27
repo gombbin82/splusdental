@@ -52,3 +52,8 @@ output "admin_domain_dns_updates" {
   description = "DNS records Firebase asks for to serve admin_domain (null while enable_admin_domain = false)."
   value       = one(google_firebase_hosting_custom_domain.admin[*].required_dns_updates)
 }
+
+output "database_name" {
+  description = "This env's Postgres database, or null while enable_database = false."
+  value       = one(google_sql_database.app[*].name)
+}

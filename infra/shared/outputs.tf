@@ -17,3 +17,13 @@ output "project_number" {
   description = "Numeric project ID."
   value       = data.google_project.this.number
 }
+
+output "sql_instance_name" {
+  description = "Cloud SQL instance name (pass to the env roots as sql_instance_name)."
+  value       = google_sql_database_instance.pg.name
+}
+
+output "sql_connection_name" {
+  description = "Cloud SQL connection name project:region:instance (env roots: sql_connection_name)."
+  value       = google_sql_database_instance.pg.connection_name
+}

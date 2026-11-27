@@ -33,6 +33,8 @@ describe('loadConfig', () => {
       gmailSender: '',
       runtimeSaEmail: '',
       ga4PropertyId: '',
+      databaseUrl: '',
+      seedJson: '',
       port: 8080,
     });
   });

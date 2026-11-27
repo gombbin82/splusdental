@@ -26,6 +26,7 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 - **API** — `api/`, Node 22 + TypeScript (Express or Hono), container on Cloud Run, min instances 0.
   - `GET /api/config` — public client config (OAuth client ID, Stripe mode).
   - `GET/POST /api/payment-links`, `POST /api/payment-links/:id/deactivate` — admin only.
+  - `GET/POST /api/admin/{providers,payers,patients}`, `PUT/DELETE …/:id` — admin only (Postgres).
 - **Admin UI** — `admin/`, its own Astro app served at the root of `admin.splus.dental` (staging:
   `admin-staging.splus.dental`; before DNS: `splus-dental-admin[-staging].web.app`), a separate Firebase
   Hosting site with the same `/api/**` rewrite. Google Identity Services sign-in; sends the ID token as
@@ -41,6 +42,13 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
   - redirect after payment → `https://splus.dental/thank-you`
   - list recent links (filtered by `metadata.source`) and deactivate
   - Later: webhook (`checkout.session.completed`) → notify front desk / record for posting into PMS.
+- **Insurance claims (837D)** — admin-only page `/claims` builds an X12 5010 837D (005010X224A2) file
+  **in the browser** (`admin/src/app/x12/837d.ts`, pure and portable to Kiwi Dental) for upload at
+  DentalXChange → Batch Claim → Upload Claims. Billing provider, treating dentist and patient (with
+  primary coverage) are picked from the database; "Enter manually…" shows the raw fields. The claim
+  itself (procedures, the 837 file) is never sent to or stored by the API; clearinghouse settings are
+  kept in localStorage. Primary insurance only for now (no COB/2320 loops, predeterminations,
+  attachments).
 - **Infra** — Terraform in `infra/` (state in a GCS bucket, not in git): project APIs, Artifact Registry,
   Cloud Run service + runtime service account, Secret Manager secrets, Firebase Hosting site, Workload
   Identity Federation for GitHub Actions deploys (no SA keys).
@@ -64,6 +72,7 @@ Status: **decided** (2026-11-16, issue #2). Update this doc as things change.
 | 13 | Emailing links | **Gmail API as the practice mailbox** (`GMAIL_SENDER`, e.g. info@), decided 2026-11-17. Keyless domain-wide delegation: the runtime SA signs its own JWT (`signJwt`), scope `gmail.send` only, authorized once by a Workspace super admin. Sent mail is in the mailbox's Sent folder; replies go to the front desk. Recipient addresses are never logged or stored. Generic content only (no PHI). |
 | 14 | Payment holds | **Stripe manual capture**, per-link checkbox (default on), decided 2026-11-17. The card is authorized at checkout and charged only when staff or an admin approves on the Payments page (full amount only), or released. Authorizations expire after ~7 days; the page shows the deadline. Releasing doesn't reopen a one-time link. |
 | 15 | Analytics | **GA4 behind opt-in consent**, decided 2026-11-18. Loads only on prod and only after Accept (WA My Health My Data Act); GPC = decline; signals/ad personalization off; never on `/thank-you` or 404. Booking is on Calendly (not tracked). A Consumer Health Data Privacy Policy is linked from every footer. The admin "Website traffic" page (admin-only) reads aggregates from the GA4 Data API as the runtime SA (`GA4_PROPERTY_ID`), cached 10 min. |
+| 16 | Database | **Postgres + Drizzle, same approach as kiwidental**, decided 2026-11-26. Local dev: PGlite in-process (`api/.data/pg`, git-ignored). Staging/prod: Cloud SQL instance `splus-web-pg` (not kiwidental's; `infra/shared`), one database per env behind `enable_database`, `DATABASE_URL` from Secret Manager; without it the DB-backed routes answer 503 rather than writing to Cloud Run's disk. Practice records can be seeded from the `splus-web-<env>-seed` secret (`SEED_JSON`, `enable_seed`), same format as the local `api/seed.local.json`. Schema `api/src/db/schema.ts`, migrations `api/drizzle/` run on startup. Tables: `providers` (practice + clinicians), `payers`, `patients` and `coverages` (PHI), all admin-only under `/api/admin/*`. PHI rules: logs carry row ids only, and database errors are logged as SQLSTATE codes because Drizzle puts query parameters in error messages. **Before real patient data goes to a hosted database, sign Google Cloud's HIPAA BAA and use only covered services (Cloud SQL and Cloud Run are covered).** |
 
 ## Prototype
 `prototype/` holds a first-pass static HTML/CSS redesign and admin UI mockup written before the stack was

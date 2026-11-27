@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { secureHeaders } from 'hono/secure-headers';
 import Stripe from 'stripe';
@@ -12,6 +12,8 @@ import {
 import { requireAdmin, requireStaff, type StaffEnv, type TokenVerifier } from './auth.js';
 import { stripeMode, type Config } from './config.js';
 import { SendRateLimiter, emailTo, paymentLinkEmail, type EmailSender } from './email.js';
+import { dbErrorCode, isDbError } from './db/errors.js';
+import type { Db } from './db/index.js';
 import { log } from './log.js';
 import {
   LINK_ID,
@@ -32,6 +34,39 @@ import {
   paymentsQuery,
   releasePayment,
 } from './payments.js';
+import {
+  BadReferenceError,
+  DuplicateChartError,
+  SelfSubscriberError,
+  createPatient,
+  deletePatient,
+  listPatients,
+  patientInput,
+  updatePatient,
+} from './patients.js';
+import {
+  createLocation,
+  deleteLocation,
+  listLocations,
+  locationInput,
+  updateLocation,
+} from './locations.js';
+import {
+  InUseError,
+  createPayer,
+  deletePayer,
+  listPayers,
+  payerInput,
+  updatePayer,
+} from './payers.js';
+import {
+  DuplicateNpiError,
+  createProvider,
+  deleteProvider,
+  listProviders,
+  providerInput,
+  updateProvider,
+} from './providers.js';
 
 export interface AppDeps {
   config: Config;
@@ -42,6 +77,8 @@ export interface AppDeps {
   emailLimiter?: SendRateLimiter;
   /** Null when GA4_PROPERTY_ID is unset: the traffic page shows setup instructions. */
   analytics?: AnalyticsClient | null;
+  /** Null when no database is configured (staging/prod without DATABASE_URL). */
+  db?: Db | null;
   now?: () => number;
 }
 
@@ -55,6 +92,7 @@ export function createApp({
   email = null,
   emailLimiter = new SendRateLimiter(),
   analytics = null,
+  db = null,
   now = Date.now,
 }: AppDeps) {
   const trafficCache = new TrafficCache();
@@ -176,6 +214,132 @@ export function createApp({
     }
   });
 
+  // Admin-only records in Postgres: providers, payers, patients (+ primary coverage).
+  // Patients are PHI: logs carry row ids and the staff email only, never values.
+  const fieldErrors = (issues: { path: PropertyKey[]; message: string }[]) =>
+    Object.fromEntries(issues.map((i) => [i.path.join('.') || '(body)', i.message]));
+
+  /** Known domain errors → [status, code]; anything else goes to onError. */
+  const knownError = (err: unknown): [409 | 400, string] | null => {
+    if (err instanceof DuplicateNpiError) return [409, 'duplicate_npi'];
+    if (err instanceof DuplicateChartError) return [409, 'duplicate_chart'];
+    if (err instanceof InUseError) return [409, 'in_use'];
+    if (err instanceof BadReferenceError) return [400, 'invalid_reference'];
+    if (err instanceof SelfSubscriberError) return [400, 'self_subscriber'];
+    return null;
+  };
+
+  function crud<I, T extends { id: string }>(
+    path: string,
+    event: string,
+    r: {
+      input: {
+        safeParse: (
+          v: unknown,
+        ) =>
+          | { success: true; data: I }
+          | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } };
+      };
+      list: (db: Db) => Promise<T[]>;
+      create: (db: Db, v: I, by: string) => Promise<T>;
+      update: (db: Db, id: string, v: I, by: string) => Promise<T | null>;
+      remove: (db: Db, id: string) => Promise<boolean>;
+    },
+  ) {
+    const key = path.split('/').pop()!;
+    const parse = async (c: Context<StaffEnv>) => {
+      let body: unknown;
+      try {
+        body = await c.req.json();
+      } catch {
+        return { res: c.json({ error: 'invalid_request' }, 400) };
+      }
+      const parsed = r.input.safeParse(body);
+      if (!parsed.success) {
+        return {
+          res: c.json({ error: 'invalid_request', fields: fieldErrors(parsed.error.issues) }, 400),
+        };
+      }
+      return { data: parsed.data };
+    };
+    const guard = async (c: Context<StaffEnv>, fn: (db: Db) => Promise<Response>) => {
+      if (!db) return c.json({ error: 'db_disabled' }, 503);
+      try {
+        return await fn(db);
+      } catch (err) {
+        const known = knownError(err);
+        if (known) return c.json({ error: known[1] }, known[0]);
+        throw err;
+      }
+    };
+
+    app.get(path, (c) => guard(c, async (d) => c.json({ [key]: await r.list(d) })));
+
+    app.post(path, (c) =>
+      guard(c, async (d) => {
+        const p = await parse(c);
+        if (p.res) return p.res;
+        const staff = c.get('staff');
+        const row = await r.create(d, p.data, staff.email);
+        log('INFO', `${event}.created`, { staff: staff.email, id: row.id });
+        return c.json(row, 201);
+      }),
+    );
+
+    app.put(`${path}/:id`, (c) =>
+      guard(c, async (d) => {
+        const id = c.req.param('id');
+        if (!UUID.test(id)) return c.json({ error: 'invalid_request' }, 400);
+        const p = await parse(c);
+        if (p.res) return p.res;
+        const staff = c.get('staff');
+        const row = await r.update(d, id, p.data, staff.email);
+        if (!row) return c.json({ error: 'not_found' }, 404);
+        log('INFO', `${event}.updated`, { staff: staff.email, id });
+        return c.json(row);
+      }),
+    );
+
+    app.delete(`${path}/:id`, (c) =>
+      guard(c, async (d) => {
+        const id = c.req.param('id');
+        if (!UUID.test(id)) return c.json({ error: 'invalid_request' }, 400);
+        if (!(await r.remove(d, id))) return c.json({ error: 'not_found' }, 404);
+        log('INFO', `${event}.deleted`, { staff: c.get('staff').email, id });
+        return c.body(null, 204);
+      }),
+    );
+  }
+
+  crud('/admin/providers', 'provider', {
+    input: providerInput,
+    list: listProviders,
+    create: createProvider,
+    update: updateProvider,
+    remove: deleteProvider,
+  });
+  crud('/admin/locations', 'location', {
+    input: locationInput,
+    list: listLocations,
+    create: createLocation,
+    update: updateLocation,
+    remove: deleteLocation,
+  });
+  crud('/admin/payers', 'payer', {
+    input: payerInput,
+    list: listPayers,
+    create: createPayer,
+    update: updatePayer,
+    remove: deletePayer,
+  });
+  crud('/admin/patients', 'patient', {
+    input: patientInput,
+    list: listPatients,
+    create: createPatient,
+    update: updatePatient,
+    remove: deletePatient,
+  });
+
   app.get('/payment-links', async (c) => {
     const q = listQuery.safeParse(c.req.query());
     if (!q.success) return c.json({ error: 'invalid_request' }, 400);
@@ -285,10 +449,14 @@ export function createApp({
   app.onError((err, c) => {
     const { status, error } = stripeErrorResponse(err);
     // Log only non-sensitive identifiers; Stripe messages can echo request params.
+    // Database errors: Drizzle's message and stack include the query parameters (patient data),
+    // so log only the SQLSTATE code.
     const detail =
       err instanceof Stripe.errors.StripeError
         ? { type: err.type, code: err.code, statusCode: err.statusCode, requestId: err.requestId }
-        : { name: err.name, stack: err.stack };
+        : isDbError(err)
+          ? { name: 'DatabaseError', sqlState: dbErrorCode(err) }
+          : { name: err.name, stack: err.stack };
     log(status >= 500 ? 'ERROR' : 'WARNING', 'request_failed', { path: c.req.path, ...detail });
     return c.json({ error }, status);
   });

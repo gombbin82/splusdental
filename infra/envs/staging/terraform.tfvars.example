@@ -27,3 +27,8 @@ gmail_sender = "info@example.com"
 # G-… measurement ID. The runtime SA must be a Viewer on the property (infra/README.md "Website
 # analytics"). Leave empty to turn the page off. Staging can read the prod property.
 ga4_property_id = ""
+
+# Postgres on the shared Cloud SQL instance (apply infra/shared first). Then add the seed secret
+# version and set enable_seed = true (infra/README.md → Database).
+enable_database = false
+enable_seed     = false

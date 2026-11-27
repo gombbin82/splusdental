@@ -12,10 +12,10 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | Dir | State | What |
 |-----|-------|------|
 | `bootstrap/` | local (not committed) | GCS state bucket `splusdental-tfstate` (versioned, uniform access, public access prevention). Shared with kiwidental, which uses prefix `kiwidental/...`. |
-| `shared/` | `gs://splusdental-tfstate/splus-web/shared` | APIs, Artifact Registry repo `splus-web`, deployer SA `splus-web-deploy`, WIF pool `splus-web-github` / provider `github-oidc`, Firebase on the project, project budget alert. |
+| `shared/` | `gs://splusdental-tfstate/splus-web/shared` | APIs, Artifact Registry repo `splus-web`, deployer SA `splus-web-deploy`, WIF pool `splus-web-github` / provider `github-oidc`, Firebase on the project, project budget alert, Cloud SQL Postgres instance `splus-web-pg` (shared by staging and prod, one database each). |
 | `envs/staging/` | `.../splus-web/staging` | `modules/env` with `env = "staging"` |
 | `envs/prod/` | `.../splus-web/prod` | `modules/env` with `env = "prod"` |
-| `modules/env/` | — | Per env: runtime SA `splus-web-api-<env>`, secrets `splus-web-<env>-stripe-{secret-key,webhook-secret}` (empty shells), Cloud Run service `splus-web-api-<env>` (behind `enable_service`), Firebase Hosting sites for the public site and the staff admin, optional public custom domains (behind `enable_custom_domains`), optional admin domain (behind `enable_admin_domain`), and the deployer's env-scoped IAM. |
+| `modules/env/` | — | Per env: runtime SA `splus-web-api-<env>`, secrets `splus-web-<env>-stripe-{secret-key,webhook-secret}` (empty shells), Cloud Run service `splus-web-api-<env>` (behind `enable_service`), Firebase Hosting sites for the public site and the staff admin, optional public custom domains (behind `enable_custom_domains`), optional admin domain (behind `enable_admin_domain`), database `splus_web_<env>` + user + `splus-web-<env>-database-url` secret on the shared instance (behind `enable_database`), the `splus-web-<env>-seed` secret (empty shell), and the deployer's env-scoped IAM. |
 
 ### Names other code depends on
 
@@ -29,8 +29,9 @@ Terraform here never imports or modifies pre-existing resources (kiwidental Clou
 | Hosting sites (public) | `splus-dental` (prod), `splus-dental-staging` (staging) — firebase.json targets `prod` / `staging` |
 | Hosting sites (admin) | `splus-dental-admin` (prod), `splus-dental-admin-staging` (staging) — targets `admin-prod` / `admin-staging` |
 | Admin domains | `admin.splus.dental` (prod), `admin-staging.splus.dental` (staging) |
-| Secrets | `splus-web-<env>-stripe-secret-key`, `splus-web-<env>-stripe-webhook-secret` |
-| Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GMAIL_SENDER`, `RUNTIME_SA_EMAIL`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`) |
+| Secrets | `splus-web-<env>-stripe-secret-key`, `splus-web-<env>-stripe-webhook-secret`, `splus-web-<env>-seed`, `splus-web-<env>-database-url` (Terraform-managed) |
+| Cloud SQL | instance `splus-web-pg` (us-west1), databases `splus_web_staging` / `splus_web_prod`, users `splus-web-<env>` |
+| Cloud Run env | `APP_ENV`, `ADMIN_EMAILS`, `STAFF_EMAILS`, `GMAIL_SENDER`, `RUNTIME_SA_EMAIL`, `GOOGLE_OAUTH_CLIENT_ID`, `PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY` (secret, `latest`), `DATABASE_URL` (secret, with `enable_database`), `SEED_JSON` (secret, with `enable_seed`) |
 
 ### Who owns what on the Cloud Run service
 
@@ -180,6 +181,37 @@ gcloud secrets versions add splus-web-staging-stripe-webhook-secret --project=sp
 Cloud Run reads `latest` at instance start, so after rotating a key deploy a new revision (or wait for
 instances to recycle). `STRIPE_WEBHOOK_SECRET` is not wired into Cloud Run yet: add an `env` block in
 `modules/env/main.tf` once the webhook exists and the secret has a version.
+
+## Database (Cloud SQL Postgres)
+
+One `db-f1-micro` instance (~$10/month) holds a database per env; the API runs migrations on startup
+(advisory-locked, so scaled-out instances don't race). Cloud Run reaches it through the Cloud SQL
+connector socket (`/cloudsql/...`), authorized by the runtime SA's `roles/cloudsql.client`; the
+instance has no authorized networks.
+
+> **Patient data:** patients and coverage are PHI. Before entering real patients in staging or prod,
+> sign Google Cloud's HIPAA BAA (Console → IAM & Admin → Privacy & Security → Business Associate
+> Amendment) and keep to covered services (Cloud SQL, Cloud Run and Secret Manager are covered).
+
+1. **Instance:** `terraform -chdir=infra/shared apply` (takes ~10 minutes the first time).
+2. **Env database:** set `enable_database = true` in `envs/staging/terraform.tfvars`, then
+   `terraform -chdir=infra/envs/staging init` (picks up the `random` provider) and `apply`. This
+   creates the database, user, password and `DATABASE_URL` secret, and gives Cloud Run the
+   connection. The next request starts an instance that migrates the schema.
+3. **Practice records (optional):** upload the same JSON used locally
+   (`api/seed.local.json`, format in `api/seed.example.json`; never patient data):
+
+   ```sh
+   gcloud secrets versions add splus-web-staging-seed --project=splusdental \
+     --data-file=api/seed.local.json
+   ```
+
+   Then set `enable_seed = true` and `apply` again. On every start the API adds the providers,
+   locations and payers that are missing and never overwrites edits made in the admin. To change
+   them, edit the records in the admin (or add a new secret version for new records).
+4. Prod: same with `envs/prod` and `splus-web-prod-seed`.
+
+Reset a staging database (destroys its data): `enable_database = false` → apply → `true` → apply.
 
 ## Email (Gmail via domain-wide delegation)
 

@@ -1,0 +1,39 @@
+{
+  "providers": [
+    {
+      "kind": "organization",
+      "orgName": "Example Dental PLLC",
+      "npi": "1234567893",
+      "taxId": "12-3456789",
+      "taxonomy": "122300000X",
+      "address1": "100 Example Ave",
+      "address2": "Ste 1",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98101-0000",
+      "phone": "2065550100"
+    },
+    {
+      "kind": "person",
+      "firstName": "Alex",
+      "lastName": "Smith",
+      "credential": "DMD",
+      "role": "dentist",
+      "npi": "1245319599",
+      "taxonomy": "122300000X",
+      "phone": "2065550100"
+    }
+  ],
+  "locations": [
+    {
+      "name": "Example Dental",
+      "address1": "100 Example Ave",
+      "address2": "Ste 1",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98101",
+      "phone": "2065550100"
+    }
+  ],
+  "payers": [{ "name": "Example Dental Plan PPO", "payerId": "00000", "filingIndicator": "12" }]
+}
